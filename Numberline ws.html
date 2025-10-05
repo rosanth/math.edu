@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inequality & Set Practice — Redesigned</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Floating label style (adapted from Find Area) */
+    .floating-label{position:relative;margin-bottom:0.6rem}
+    .floating-label input{width:100%;padding:12px;border-radius:.75rem;border:2px solid rgba(0,0,0,0.08);background:#fff;outline:none}
+    .floating-label input:focus{border-color:rgba(79,70,229,0.9)}
+    .floating-label label{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6b7280;pointer-events:none;transition:all .18s ease}
+    .floating-label input:focus + label, .floating-label input:not(:placeholder-shown) + label{top:6px;font-size:.75rem;color:#4f46e5}
+
+    /* Small helpers */
+    .card { border-radius:1rem; box-shadow: 0 8px 20px rgba(15,23,42,0.06); }
+    svg.border { background:linear-gradient(180deg,#fff,#fbfbff); border-radius:.75rem; }
+
+    /* Ensure svg is horizontally scrollable on small screens */
+    .svg-wrapper{overflow:auto}
+
+    /* Simple responsive tweaks */
+    @media (min-width:1024px){ .grid-lg{display:grid;grid-template-columns:1fr 420px;gap:1.25rem} }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+
+<div class="w-full max-w-5xl space-y-6">
+  <header class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+    <h1 class="text-3xl font-bold">Inequality & Set Practice</h1>
+    <p class="text-indigo-100 mt-1">Converted UI — styled like the <em>Find Area</em> page: floating labels, compact cards, responsive layout.</p>
+  </header>
+
+  <main class="grid grid-cols-1 gap-6">
+
+    <!-- Top grid: Number line + controls -->
+    <section class="card bg-white p-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        <div class="lg:col-span-2">
+          <h2 class="text-xl font-semibold mb-3">1. Number Line Question</h2>
+
+          <div class="svg-wrapper mb-4">
+            <!-- responsive svg: width determined in JS -->
+            <svg id="numline" class="border" height="160" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 160" preserveAspectRatio="xMinYMid meet"></svg>
+          </div>
+
+          <div id="intervalFeedback" class="text-lg"></div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="floating-label">
+            <input id="intervalInput" placeholder=" " type="text" class="text-lg" />
+            <label for="intervalInput">Type your answer (e.g. x ≥ 2 or 1 &lt; x &le; 4)</label>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button id="checkInterval" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold shadow">Check Answer</button>
+            <button id="newInterval" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-xl">New Question</button>
+            <button id="zoomMinus" class="bg-white border px-4 py-3 rounded-xl">➖ Zoom</button>
+            <button id="zoomPlus" class="bg-white border px-4 py-3 rounded-xl">➕ Zoom</button>
+          </div>
+
+          <div class="text-sm text-gray-500 mt-2">Tip: The number line is scrollable on small screens. Use zoom buttons to change scale.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grid: Set practice + extras -->
+    <section class="grid-lg gap-6">
+      <div class="card bg-white p-6">
+        <h2 class="text-xl font-semibold mb-3">2. Set Question</h2>
+        <p id="setQuestion" class="text-lg font-medium mb-3"></p>
+
+        <div class="floating-label mb-3">
+          <input id="setInput" placeholder=" " type="text" />
+          <label for="setInput">Type set in inequality form (e.g. x ≥ 1)</label>
+        </div>
+
+        <div class="flex gap-3">
+          <button id="checkSet" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl font-semibold">Check Answer</button>
+          <button id="newSet" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-xl">New Question</button>
+        </div>
+
+        <div id="setFeedback" class="mt-3 text-lg"></div>
+      </div>
+
+      <aside class="card bg-white p-6">
+        <h3 class="text-lg font-semibold mb-3">Controls & Help</h3>
+        <ul class="text-sm space-y-2 text-gray-600">
+          <li>✅ Use the <strong>Check</strong> buttons to validate answers.</li>
+          <li>🔁 Use <strong>New Question</strong> to generate random problems.</li>
+          <li>📱 On mobile, swipe the number line horizontally to see all ticks.</li>
+        </ul>
+      </aside>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ========= Utilities =========
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function sample(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+// ========= SVG helpers =========
+const svg = document.getElementById('numline');
+const NS = 'http://www.w3.org/2000/svg';
+function create(tag){return document.createElementNS(NS, tag)}
+function clearSVG(){ while(svg.firstChild) svg.removeChild(svg.firstChild) }
+
+// Layout / scale controlled variables
+let minX=-10, maxX=10, stepPx=60, paddingLeft=40, paddingRight=40;
+function toX(val){ return paddingLeft + (val - minX) * stepPx }
+
+// Responsive width calculation based on container width
+function updateSVGWidth(){
+  const wrapper = svg.parentElement; // svg-wrapper
+  const available = Math.max(600, wrapper.clientWidth || 800);
+  // compute needed width for ticks
+  const needed = paddingLeft + paddingRight + (maxX - minX) * stepPx;
+  const width = Math.max(available, needed);
+  // set viewBox width so preserveAspectRatio works
+  svg.setAttribute('viewBox', `0 0 ${width} 160`);
+  svg.style.width = width + 'px';
+}
+
+function line(x1,y1,x2,y2,sw,stroke){const l=create('line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('stroke',stroke);l.setAttribute('stroke-width',sw);l.setAttribute('stroke-linecap','round');return l}
+function circle(cx,cy,r,fill,stroke,sw){const c=create('circle');c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',r); if(fill) c.setAttribute('fill',fill); if(stroke) c.setAttribute('stroke',stroke); if(sw) c.setAttribute('stroke-width',sw); return c}
+function text(x,y,txt){const t=create('text'); t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('font-size',12); t.setAttribute('text-anchor','middle'); t.setAttribute('fill','#111827'); t.textContent=txt; return t }
+
+function drawBase(){
+  clearSVG();
+  updateSVGWidth();
+  const vb = svg.viewBox.baseVal.width;
+  const g=create('g'); svg.appendChild(g);
+  const y=80;
+  g.appendChild(line(paddingLeft,y, vb - paddingRight,y,2,'#0f172a'));
+  for(let i=minX;i<=maxX;i++){
+    const x = toX(i);
+    g.appendChild(line(x,y-6,x,y+6,1,'#374151'));
+    g.appendChild(text(x,y+22,i));
+  }
+}
+
+function renderInterval(intv){
+  drawBase();
+  const y=80;
+  const leftInf = intv.leftInf, rightInf = intv.rightInf;
+  const aX = leftInf ? paddingLeft : toX(intv.left);
+  const bX = rightInf ? svg.viewBox.baseVal.width - paddingRight : toX(intv.right);
+
+  svg.appendChild(line(aX,y,bX,y,4,'#111827'));
+
+  if(leftInf){
+    const arr=create('path'); arr.setAttribute('d',`M${paddingLeft+20} ${y-6} L${paddingLeft} ${y} L${paddingLeft+20} ${y+6}`);
+    arr.setAttribute('fill','none'); arr.setAttribute('stroke','#111827'); arr.setAttribute('stroke-width',2); svg.appendChild(arr);
+  } else {
+    svg.appendChild(intv.leftClosed?circle(aX,y,7,'#111827'):circle(aX,y,7,'transparent','#111827',2));
+  }
+
+  if(rightInf){
+    const arr=create('path'); arr.setAttribute('d',`M${bX-20} ${y-6} L${bX} ${y} L${bX-20} ${y+6}`);
+    arr.setAttribute('fill','none'); arr.setAttribute('stroke','#111827'); arr.setAttribute('stroke-width',2); svg.appendChild(arr);
+  } else {
+    svg.appendChild(intv.rightClosed?circle(bX,y,7,'#111827'):circle(bX,y,7,'transparent','#111827',2));
+  }
+}
+
+// ========= Random Interval Generation =========
+let currentInterval = null;
+function newIntervalQuestion(){
+  minX = randInt(-10,0);
+  maxX = randInt(5,15);
+
+  // random scale selection
+  stepPx = Math.max(28, Math.floor((600 / Math.max(8, maxX - minX))));
+
+  const allowInf = Math.random() < 0.45;
+  let leftInf = allowInf && Math.random() < 0.5;
+  let rightInf = allowInf && Math.random() < 0.5 && !leftInf;
+
+  let left = leftInf ? null : randInt(minX, maxX - 1);
+  let right = rightInf ? null : randInt(left ? left + 1 : minX + 1, maxX);
+  let leftClosed = Math.random() < 0.5;
+  let rightClosed = Math.random() < 0.5;
+
+  currentInterval = { left, right, leftClosed, rightClosed, leftInf, rightInf };
+  renderInterval(currentInterval);
+  document.getElementById('intervalInput').value='';
+  document.getElementById('intervalFeedback').textContent='';
+}
+
+function intervalAnswerString(){
+  const i=currentInterval;
+  if(i.leftInf && i.rightInf) return 'x ∈ ℤ';
+  if(i.leftInf) return `x ${i.rightClosed?'≤':'<'} ${i.right}`;
+  if(i.rightInf) return `x ${i.leftClosed?'>=':'>'} ${i.left}`;
+  return `${i.left} ${i.leftClosed?'≤':'<'} x ${i.rightClosed?'≤':'<'} ${i.right}`;
+}
+
+// ========= Set Question =========
+let currentSetAnswer='';
+function newSetQuestion(){
+  const mode = sample(['asc','desc','finite']);
+  let question='',answer='';
+  if(mode==='asc'){
+    const start = randInt(-3,5);
+    question = `x = { ${start}, ${start+1}, ${start+2}, ... }`;
+    answer = `x ≥ ${start}`;
+  } else if(mode==='desc'){
+    const end = randInt(-5,3);
+    question = `x = { ${end}, ${end-1}, ${end-2}, ... }`;
+    answer = `x ≤ ${end}`;
+  } else {
+    const a = randInt(-3,3);
+    const b = a + randInt(2,4);
+    question = `x = { ${Array.from({length:b-a+1},(_,k)=>a+k).join(', ')} }`;
+    answer = `${a} ≤ x ≤ ${b}`;
+  }
+  document.getElementById('setQuestion').textContent = `Set given: ${question}`;
+  document.getElementById('setInput').value='';
+  document.getElementById('setFeedback').textContent='';
+  currentSetAnswer = answer;
+}
+
+// ========= Normalization & Checking =========
+function normalize(str){
+  return String(str||'').replace(/\s+/g,'')
+             .replace(/>=/g,'≥').replace(/<=/g,'≤')
+             .replace(/>=/g,'≥').replace(/<=/g,'≤')
+             .replace(/>/g,'>').replace(/</g,'<')
+}
+
+// Bindings
+document.getElementById('checkInterval').addEventListener('click', ()=>{
+  const user = normalize(document.getElementById('intervalInput').value);
+  const correct = normalize(intervalAnswerString());
+  const fb = document.getElementById('intervalFeedback');
+  if(user === correct) { fb.textContent = '✅ Correct!'; fb.classList.remove('text-red-600'); fb.classList.add('text-green-600'); }
+  else { fb.textContent = `❌ Incorrect. Correct answer: ${intervalAnswerString()}`; fb.classList.remove('text-green-600'); fb.classList.add('text-red-600'); }
+});
+
+document.getElementById('checkSet').addEventListener('click', ()=>{
+  const user = normalize(document.getElementById('setInput').value);
+  const correct = normalize(currentSetAnswer);
+  const fb = document.getElementById('setFeedback');
+  if(user === correct) { fb.textContent = '✅ Correct!'; fb.classList.remove('text-red-600'); fb.classList.add('text-green-600'); }
+  else { fb.textContent = `❌ Incorrect. Correct answer: ${currentSetAnswer}`; fb.classList.remove('text-green-600'); fb.classList.add('text-red-600'); }
+});
+
+// New question buttons
+document.getElementById('newInterval').addEventListener('click', newIntervalQuestion);
+document.getElementById('newSet').addEventListener('click', newSetQuestion);
+
+// Zoom controls
+document.getElementById('zoomPlus').addEventListener('click', ()=>{ stepPx = Math.min(120, stepPx + 8); renderInterval(currentInterval)});
+document.getElementById('zoomMinus').addEventListener('click', ()=>{ stepPx = Math.max(20, stepPx - 8); renderInterval(currentInterval)});
+
+// Ensure svg resizes on window resize
+window.addEventListener('resize', ()=>{ updateSVGWidth(); renderInterval(currentInterval); });
+
+// initial
+newIntervalQuestion(); newSetQuestion();
+
+</script>
+</body>
+</html>

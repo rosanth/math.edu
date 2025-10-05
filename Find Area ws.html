@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inequalities Worksheet — Styled</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Floating label used in Find Area style */
+    .floating-label { position: relative; margin-bottom: 1rem; }
+    .floating-label input, .floating-label textarea, .floating-label select {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: 2px solid rgba(0,0,0,0.07);
+      background: #fff; outline: none;
+    }
+    .floating-label label {
+      position: absolute; top: 50%; left: 14px; transform: translateY(-50%);
+      font-size: 0.9rem; color: #6b7280; transition: all .18s ease; pointer-events: none;
+    }
+    .floating-label input:focus + label,
+    .floating-label input:not(:placeholder-shown) + label,
+    .floating-label select:focus + label,
+    .floating-label select:not([value=""]) + label {
+      top: 6px; font-size: 0.75rem; color: #4f46e5;
+    }
+
+    body { background: #f3f4f6; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    .correct { color: #16a34a; font-weight: 600; }
+    .wrong { color: #dc2626; font-weight: 600; }
+    table td, table th { padding: 6px; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-5xl space-y-6">
+
+    <header class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+      <h1 class="text-3xl font-bold">Inequalities Worksheet</h1>
+      <p class="text-indigo-100 mt-1">Interactive checks for line type, shading and table values — now with a modern UI.</p>
+    </header>
+
+    <main class="grid grid-cols-1 gap-6">
+
+      <!-- Questions container -->
+      <section id="questions" class="bg-white rounded-2xl p-6 shadow-lg"></section>
+
+      <!-- Test point / controls card -->
+      <section class="bg-white rounded-2xl p-6 shadow-lg">
+        <h2 class="text-lg font-semibold mb-4">Test a Point & Controls</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div class="floating-label">
+            <input id="px" type="number" placeholder=" " />
+            <label for="px">x (test point)</label>
+          </div>
+
+          <div class="floating-label">
+            <input id="py" type="number" placeholder=" " />
+            <label for="py">y (test point)</label>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="checkAnswers()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold shadow">Submit answers</button>
+            <button onclick="generateQuestions()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold shadow">New question</button>
+          </div>
+        </div>
+
+        <div id="pointFeedback" class="mt-4 text-lg"></div>
+      </section>
+
+      <!-- Short instruction/footer -->
+      <section class="text-sm text-gray-600">
+        Tip: For slope inequalities, fill the table values (recommended x = -1,0,1). Choose correct line type (solid/dashed) and shading (above/below/left/right).
+      </section>
+
+    </main>
+  </div>
+
+<script>
+/* ===== Logic adapted from original worksheet2 but UI-friendly ===== */
+
+const lineTypes = { "<": "dashed", ">": "dashed", "<=": "solid", ">=": "solid" };
+const shadeDirections = {
+  "y<": "below", "y<=": "below", "y>": "above", "y>=": "above",
+  "x<": "left", "x<=": "left", "x>": "right", "x>=": "right"
+};
+
+let currentQs = [];
+
+function randomIneq() {
+  const ops = ["<", "<=", ">", ">="];
+  const slopes = [-2,-1,1,2];
+  const constants = [-4,-2,-1,0,1,2,3,4];
+  const type = Math.floor(Math.random()*3); // 0: horizontal, 1: vertical, 2: slope
+  let op = ops[Math.floor(Math.random()*ops.length)];
+  if(type===0){
+    let c = constants[Math.floor(Math.random()*constants.length)];
+    return { text:`y ${op} ${c}`, type:"h", op, c };
+  }
+  if(type===1){
+    let c = constants[Math.floor(Math.random()*constants.length)];
+    return { text:`x ${op} ${c}`, type:"v", op, c };
+  }
+  let m = slopes[Math.floor(Math.random()*slopes.length)];
+  let b = constants[Math.floor(Math.random()*constants.length)];
+  return { text:`y ${op} ${m}x ${b>=0?"+":""}${b}`, type:"s", op, m, b };
+}
+
+function generateQuestions() {
+  const qDiv = document.getElementById("questions");
+  qDiv.innerHTML = "";
+  currentQs = [];
+  let count = Math.floor(Math.random()*3)+1; // 1–3 inequalities
+  for(let i=0;i<count;i++){
+    let q = randomIneq();
+    currentQs.push(q);
+
+    let tableHTML = "";
+    if(q.type==="s"){
+      tableHTML = `
+        <div class="mt-3">
+          <p class="text-sm text-gray-500 mb-2">Fill table for x = -1, 0, 1 (y = m·x + b):</p>
+          <div class="overflow-x-auto">
+            <table class="w-full border border-gray-200 rounded-lg text-center">
+              <thead class="bg-gray-50"><tr><th class="border">x</th><th class="border">y</th><th class="border">feedback</th></tr></thead>
+              <tbody>
+                <tr><td class="border">-1</td><td class="border"><input type="number" id="y${i}_-1" class="p-2 w-28"></td><td class="border"><span id="fb_y${i}_-1"></span></td></tr>
+                <tr><td class="border">0</td><td class="border"><input type="number" id="y${i}_0" class="p-2 w-28"></td><td class="border"><span id="fb_y${i}_0"></span></td></tr>
+                <tr><td class="border">1</td><td class="border"><input type="number" id="y${i}_1" class="p-2 w-28"></td><td class="border"><span id="fb_y${i}_1"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    } else {
+      tableHTML = `<p class="text-gray-500 italic mt-2">No table needed for this inequality.</p>`;
+    }
+
+    qDiv.innerHTML += `
+      <div class="mb-6 p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-100 rounded-2xl shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p class="font-semibold text-gray-800">Inequality ${i+1}:</p>
+            <p class="font-mono text-indigo-700 text-lg">${q.text}</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
+            <div>
+              <label class="text-sm text-gray-600">Line type</label>
+              <select id="line${i}" class="p-2 rounded-lg border w-full">
+                <option value="">--Select--</option>
+                <option value="solid">Solid</option>
+                <option value="dashed">Dashed</option>
+              </select>
+              <div id="fb_line${i}" class="mt-1"></div>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600">Shading</label>
+              <select id="shade${i}" class="p-2 rounded-lg border w-full">
+                <option value="">--Select--</option>
+                <option value="above">Above</option>
+                <option value="below">Below</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+              <div id="fb_shade${i}" class="mt-1"></div>
+            </div>
+          </div>
+        </div>
+
+        ${tableHTML}
+      </div>
+    `;
+  }
+
+  // clear feedback/test point
+  document.getElementById("pointFeedback").innerHTML = "";
+  document.getElementById("px").value = "";
+  document.getElementById("py").value = "";
+}
+
+function checkAnswers() {
+  currentQs.forEach((q,i)=>{
+    // correct line type
+    let correctLine = lineTypes[q.op];
+    let userLine = document.getElementById(`line${i}`).value;
+    const fbLine = document.getElementById(`fb_line${i}`);
+    if(userLine===correctLine) { fbLine.textContent = "✔ Line"; fbLine.className = "correct"; }
+    else { fbLine.textContent = `✘ (Ans: ${correctLine})`; fbLine.className = "wrong"; }
+
+    // correct shading
+    let correctShade;
+    if(q.type==="s"||q.type==="h") correctShade = shadeDirections["y"+q.op];
+    else correctShade = shadeDirections["x"+q.op];
+
+    let userShade = document.getElementById(`shade${i}`).value;
+    const fbShade = document.getElementById(`fb_shade${i}`);
+    if(userShade===correctShade) { fbShade.textContent = "✔ Shading"; fbShade.className = "correct"; }
+    else { fbShade.textContent = `✘ (Ans: ${correctShade})`; fbShade.className = "wrong"; }
+
+    // slope table check
+    if(q.type==="s"){
+      [-1,0,1].forEach(x=>{
+        let correctY = q.m*x + q.b;
+        let userY = parseFloat(document.getElementById(`y${i}_${x}`).value);
+        let fb = document.getElementById(`fb_y${i}_${x}`);
+        if(!isNaN(userY) && Math.abs(userY - correctY) < 1e-9) { fb.textContent = "✔"; fb.className = "correct"; }
+        else { fb.textContent = `✘ (Ans: ${correctY})`; fb.className = "wrong"; }
+      });
+    }
+  });
+
+  // check test point against ALL inequalities
+  let px = parseFloat(document.getElementById("px").value);
+  let py = parseFloat(document.getElementById("py").value);
+  let ok = true;
+  if(isNaN(px) || isNaN(py)) {
+    document.getElementById("pointFeedback").textContent = "✘ Enter a point!";
+    document.getElementById("pointFeedback").className = "wrong";
+    return;
+  }
+
+  currentQs.forEach(q=>{
+    if(q.type==="h"){
+      if(q.op=="<") ok = ok && (py < q.c);
+      if(q.op=="<=") ok = ok && (py <= q.c);
+      if(q.op==">") ok = ok && (py > q.c);
+      if(q.op==">=") ok = ok && (py >= q.c);
+    } else if(q.type==="v"){
+      if(q.op=="<") ok = ok && (px < q.c);
+      if(q.op=="<=") ok = ok && (px <= q.c);
+      if(q.op==">") ok = ok && (px > q.c);
+      if(q.op==">=") ok = ok && (px >= q.c);
+    } else if(q.type==="s"){
+      let rhs = q.m*px + q.b;
+      if(q.op=="<") ok = ok && (py < rhs);
+      if(q.op=="<=") ok = ok && (py <= rhs);
+      if(q.op==">") ok = ok && (py > rhs);
+      if(q.op==">=") ok = ok && (py >= rhs);
+    }
+  });
+
+  document.getElementById("pointFeedback").textContent = ok ? "✔ Correct — point lies in intersection" : "✘ Wrong — point not in intersection";
+  document.getElementById("pointFeedback").className = ok ? "correct" : "wrong";
+}
+
+// initialize
+generateQuestions();
+</script>
+</body>
+</html>

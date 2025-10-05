@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inequality Worksheet — Converted UI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* Adapted from Find Area.html styles */
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f6f7fb; color:#111; }
+  .floating-label { position: relative; margin-bottom: 0.75rem; }
+  .floating-label input, .floating-label textarea, .floating-label select { width: 100%; padding: 12px 12px; border-radius: 0.75rem; border: 2px solid rgba(0,0,0,0.06); background: #fff; outline: none; }
+  .floating-label label { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); font-size: 0.9rem; color: #6b7280; transition: all .18s ease; pointer-events: none; }
+  .floating-label input:focus + label, .floating-label input:not(:placeholder-shown) + label, .floating-label textarea:focus + label, .floating-label textarea:not(:placeholder-shown) + label, .floating-label select:focus + label, .floating-label select:not([value=""]) + label { top: 0.25rem; font-size: 0.75rem; color: #4f46e5; }
+  .card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 8px 24px rgba(12,20,40,0.06); }
+  .feedback { display:inline-block; margin-left:10px; font-size:13px; padding:4px 8px; border-radius:8px; vertical-align:middle; }
+  .feedback.ok { color:#065f46; background: rgba(6,95,70,0.08); border:1px solid rgba(6,95,70,0.12); font-weight:700; }
+  .feedback.bad { color:#7f1d1d; background: rgba(127,29,29,0.06); border:1px solid rgba(127,29,29,0.10); font-weight:700; }
+  canvas { width:100%; height:auto; border-radius:8px; background: linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid #e6eefb; display:block; }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-5xl mx-auto space-y-6">
+
+    <header class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+      <h1 class="text-3xl font-bold">Inequality Worksheet — Read the graph and find the inequality</h1>
+      <p class="text-indigo-100 mt-1">UI converted to the "Find Area" style — interactive canvas below</p>
+    </header>
+
+    <!-- Canvas Card -->
+    <div class="card">
+      <div class="mb-4">
+        <canvas id="graph" width="920" height="420"></canvas>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <button id="btn-new" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow">New random inequality</button>
+        <button id="btn-redraw" class="bg-white border border-indigo-100 text-indigo-700 py-2 px-4 rounded-lg">Redraw</button>
+        <button id="btn-show" class="ml-auto bg-amber-500 text-white py-2 px-4 rounded-lg">Show correct inequality</button>
+      </div>
+    </div>
+
+    <!-- Points Card -->
+    <div class="card grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <div class="floating-label">
+          <input id="x1" placeholder=" " />
+          <label for="x1">Point A — x₁</label>
+        </div>
+        <div class="floating-label">
+          <input id="y1" placeholder=" " />
+          <label for="y1">Point A — y₁</label>
+        </div>
+      </div>
+      <div>
+        <div class="floating-label">
+          <input id="x2" placeholder=" " />
+          <label for="x2">Point B — x₂</label>
+        </div>
+        <div class="floating-label">
+          <input id="y2" placeholder=" " />
+          <label for="y2">Point B — y₂</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slope & Intercept Card -->
+    <div class="card grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="floating-label">
+        <input id="slope" type="text" placeholder=" " />
+        <label for="slope">Slope (m)</label>
+      </div>
+      <div class="floating-label">
+        <input id="intercept" type="text" placeholder=" " />
+        <label for="intercept">Y-intercept (c)</label>
+      </div>
+    </div>
+
+    <!-- Equation Card -->
+    <div class="card">
+      <div class="floating-label">
+        <input id="equation" type="text" placeholder=" " />
+        <label for="equation">Line equation (e.g. y = 2x + 3)</label>
+      </div>
+    </div>
+
+    <!-- Line Type & Shade Card -->
+    <div class="card grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-gray-700 mb-2">Line type</label>
+        <select id="ui-line-type" class="w-full p-3 rounded-lg border">
+          <option value="random">Random (solid/dashed)</option>
+          <option value="solid">Solid (≥ / ≤)</option>
+          <option value="dashed">Dashed (> / <)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-700 mb-2">Shade</label>
+        <select id="ui-shade" class="w-full p-3 rounded-lg border">
+          <option value="random">Random (above/below)</option>
+          <option value="above">Above</option>
+          <option value="below">Below</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Final Inequality Card -->
+    <div class="card">
+      <div class="floating-label">
+        <input id="finalIneq" type="text" placeholder=" " />
+        <label for="finalIneq">Final inequality (e.g. y ≥ 2x + 3)</label>
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button id="btn-check" class="bg-green-600 text-white py-2 px-4 rounded-lg">Submit & Check</button>
+        <button id="btn-redo" class="bg-white border py-2 px-4 rounded-lg">Reset</button>
+      </div>
+      <div id="results" class="mt-4"></div>
+    </div>
+
+  </div>
+
+<script>
+/* ---------- Canvas and logic copied from original worksheet3.html (kept behavior) ---------- */
+
+// utility
+const EPS = 1e-6;
+function nearlyEqual(a,b,eps=EPS){ return Math.abs(a-b) <= eps; }
+function parseNumber(str){
+  if(str === undefined || str === null) return NaN;
+  str = String(str).trim(); if(!str.length) return NaN; str = str.replace(/−/g,'-');
+  if(str.includes('/')){ const parts = str.split('/'); if(parts.length === 2){ const n = parseFloat(parts[0].trim()); const d = parseFloat(parts[1].trim()); if(!isNaN(n) && !isNaN(d) && d !== 0) return n/d; return NaN; } }
+  const n = parseFloat(str.replace(/[^\d.+-eE]/g,'')); return isNaN(n) ? NaN : n;
+}
+
+function parseLinear(expr){
+  expr = String(expr).toLowerCase(); expr = expr.replace(/\s+/g,''); if(expr[0] !== '+' && expr[0] !== '-') expr = '+' + expr;
+  const parts = expr.match(/[+\-][^+\-]*/g) || []; let m = 0, c = 0;
+  parts.forEach(p => { if(p.includes('x')){ let coeff = p.replace('x',''); if(coeff === '+' || coeff === '') coeff = '+1'; if(coeff === '-') coeff = '-1'; const val = parseNumber(coeff); if(!isNaN(val)) m += val; } else { const val = parseNumber(p); if(!isNaN(val)) c += val; } });
+  return {m,c};
+}
+
+function parseUserExpr(text){
+  if(!text) return {ok:false, reason:'empty'};
+  let t = String(text).trim(); t = t.replace(/≤/g,'<=').replace(/≥/g,'>=').replace(/×/g,'*');
+  const ineqMatch = t.match(/(.*)(<=|>=|=|<|>)(.*)/);
+  if(ineqMatch){
+    const left = ineqMatch[1].trim(); const op = ineqMatch[2]; const right = ineqMatch[3].trim();
+    const leftHasY = /(^|[^a-z0-9_])y([^a-z0-9_]|$)/i.test(left);
+    const rightHasY = /(^|[^a-z0-9_])y([^a-z0-9_]|$)/i.test(right);
+    let L = left, R = right; if(!leftHasY && rightHasY){ L = right; R = left; }
+    const Ltrim = L.replace(/\s+/g,''); const Rtrim = R.replace(/\s+/g,'');
+    if(/^x$/i.test(Ltrim) || /^x$/.test(Rtrim)){
+      const numSide = Ltrim.toLowerCase() === 'x' ? Rtrim : Ltrim; const val = parseNumber(numSide);
+      if(!isNaN(val)) return {ok:true, type:'vertical', xVal:val, op};
+    }
+    let rhs = R;
+    if(/y/i.test(L)){
+      const Ly = L.replace(/\s*/g,'').toLowerCase();
+      if(/^y$/.test(Ly)) { rhs = R; }
+      else { const LnoY = L.replace(/y/i,''); rhs = `(${R})-(${LnoY})`; }
+    } else { rhs = R; }
+    try { const linear = parseLinear(rhs); return {ok:true, type:'normal', m:linear.m, c:linear.c, op}; } catch(e){ return {ok:false, reason:'could not parse linear'}; }
+  } else { return {ok:false, reason:'no operator'}; }
+}
+
+/* ---------- Canvas drawing (from original) ---------- */
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+let state = { m:2, c:1, lineType:'solid', shade:'above', sampleA:{x:1,y:3}, sampleB:{x:2,y:5} };
+const WIDTH = canvas.width; const HEIGHT = canvas.height; const MARGIN = 40; const UNITS_X = 10; const UNITS_Y = 6;
+const scaleX = (WIDTH - 2*MARGIN) / (2*UNITS_X); const scaleY = (HEIGHT - 2*MARGIN) / (2*UNITS_Y);
+const centerX = WIDTH/2; const centerY = HEIGHT/2;
+function toPx(x,y){ return { px: centerX + x*scaleX, py: centerY - y*scaleY }; }
+function clearCanvas(){ ctx.clearRect(0,0,WIDTH,HEIGHT); }
+function drawAxes(){ ctx.save(); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,WIDTH,HEIGHT); ctx.strokeStyle="#eef2f8"; ctx.lineWidth=1; for(let i=-UNITS_X;i<=UNITS_X;i++){ const p = toPx(i,0).px; ctx.beginPath(); ctx.moveTo(p,0); ctx.lineTo(p,HEIGHT); ctx.stroke(); } for(let j=-UNITS_Y;j<=UNITS_Y;j++){ const p = toPx(0,j).py; ctx.beginPath(); ctx.moveTo(0,p); ctx.lineTo(WIDTH,p); ctx.stroke(); } ctx.strokeStyle = "#213547"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(WIDTH, centerY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, HEIGHT); ctx.stroke(); ctx.fillStyle="#2b3b4a"; ctx.font = "12px sans-serif"; for(let i=-UNITS_X;i<=UNITS_X;i++){ const p = toPx(i,0).px; ctx.beginPath(); ctx.moveTo(p, centerY-4); ctx.lineTo(p, centerY+4); ctx.stroke(); if(i !== 0) ctx.fillText(String(i), p-6, centerY + 18); } for(let j=-UNITS_Y;j<=UNITS_Y;j++){ const p = toPx(0,j).py; ctx.beginPath(); ctx.moveTo(centerX-4, p); ctx.lineTo(centerX+4, p); ctx.stroke(); if(j !== 0) ctx.fillText(String(j), centerX + 8, p + 4); } ctx.restore(); }
+function drawLineAndShade(){ const m = state.m, c = state.c; const lineType = state.lineType; const shade = state.shade; const xLeft = -UNITS_X, xRight = UNITS_X; const yLeft = m * xLeft + c; const yRight = m * xRight + c; ctx.save(); ctx.beginPath(); const leftPx = toPx(xLeft, yLeft), rightPx = toPx(xRight, yRight); if(shade === 'above'){ ctx.moveTo(leftPx.px, leftPx.py); ctx.lineTo(rightPx.px, rightPx.py); ctx.lineTo(WIDTH, 0); ctx.lineTo(0, 0); ctx.closePath(); ctx.fillStyle = 'rgba(99,102,241,0.14)'; ctx.fill(); } else { ctx.moveTo(leftPx.px, leftPx.py); ctx.lineTo(rightPx.px, rightPx.py); ctx.lineTo(WIDTH, HEIGHT); ctx.lineTo(0, HEIGHT); ctx.closePath(); ctx.fillStyle = 'rgba(239,68,68,0.08)'; ctx.fill(); } ctx.restore(); ctx.save(); ctx.beginPath(); if(lineType === 'dashed'){ ctx.setLineDash([8,6]); } else { ctx.setLineDash([]); } ctx.lineWidth = 2; ctx.strokeStyle = "#0f172a"; ctx.moveTo(leftPx.px, leftPx.py); ctx.lineTo(rightPx.px, rightPx.py); ctx.stroke(); ctx.restore(); drawSamplePoints(); }
+function drawSamplePoints(){ const pA = toPx(state.sampleA.x, state.sampleA.y); const pB = toPx(state.sampleB.x, state.sampleB.y); ctx.beginPath(); ctx.fillStyle = "#0ea5a4"; ctx.arc(pA.px, pA.py, 5, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#083344"; ctx.font = "12px sans-serif"; ctx.fillText(`A (${state.sampleA.x}, ${state.sampleA.y})`, pA.px + 8, pA.py - 8); ctx.beginPath(); ctx.fillStyle = "#ef4444"; ctx.arc(pB.px, pB.py, 5, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#083344"; ctx.fillText(`B (${state.sampleB.x}, ${state.sampleB.y})`, pB.px + 8, pB.py - 8); }
+function redraw(){ clearCanvas(); drawAxes(); drawLineAndShade(); }
+function formatM(m){ if(nearlyEqual(m, Math.round(m))) return String(Math.round(m)); return parseFloat(m.toFixed(3)).toString(); }
+function formatC(c){ if(nearlyEqual(c, Math.round(c))) return String(Math.round(c)); return parseFloat(c.toFixed(3)).toString(); }
+
+function randomChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function newRandomInequality(){ const slopeOptions = [-3,-2,-1.5,-1,-0.5,0.5,1,1.5,2,3]; const m = randomChoice(slopeOptions); const c = Math.floor(Math.random()*11) - 5; const uiLine = document.getElementById('ui-line-type').value; const uiShade = document.getElementById('ui-shade').value; const lineType = uiLine === 'random' ? (Math.random()<0.5 ? 'solid' : 'dashed') : uiLine; const shade = uiShade === 'random' ? (Math.random()<0.5 ? 'above' : 'below') : uiShade; let x1 = Math.floor(Math.random()*9) - 4; let x2 = x1 + 1; const y1 = Math.round((m*x1 + c) * 1000) / 1000; const y2 = Math.round((m*x2 + c) * 1000) / 1000; state.m = m; state.c = c; state.lineType = lineType; state.shade = shade; state.sampleA = {x:x1, y: y1}; state.sampleB = {x:x2, y:y2}; document.getElementById('x1').value = state.sampleA.x; document.getElementById('y1').value = state.sampleA.y; document.getElementById('x2').value = state.sampleB.x; document.getElementById('y2').value = state.sampleB.y; document.getElementById('slope').value = ''; document.getElementById('intercept').value = ''; document.getElementById('equation').value = ''; document.getElementById('finalIneq').value = ''; document.querySelectorAll('.feedback').forEach(e => e.remove()); document.getElementById('results').innerHTML = ''; redraw(); }
+
+function normalizeExprForCompare(s){ return String(s).replace(/\s+/g,'').replace(/≤/g,'<=').replace(/≥/g,'>=').toLowerCase(); }
+
+function checkAnswers(){ const results = document.getElementById('results'); results.innerHTML = ''; document.querySelectorAll('.feedback').forEach(e => e.remove()); function setFeedback(el, msg, ok){ const span = document.createElement('span'); span.className = 'feedback ' + (ok ? 'ok' : 'bad'); span.textContent = msg; const container = el.parentNode; container.appendChild(span); }
+  const slopeInput = document.getElementById('slope'); const interceptInput = document.getElementById('intercept'); const equationInput = document.getElementById('equation'); const finalInput = document.getElementById('finalIneq'); const uiLine = document.getElementById('ui-line-type'); const uiShade = document.getElementById('ui-shade');
+  if (state.m === undefined) { results.innerHTML = `<div class="bad">Generate a question first.</div>`; return; }
+  const expectedIneqStr = `${state.shade === 'above' ? (state.lineType === 'solid' ? 'y ≥ ' : 'y > ') : (state.lineType === 'solid' ? 'y ≤ ' : 'y < ')}${formatM(state.m)}x + ${formatC(state.c)}`;
+  const slopeRaw = slopeInput.value.trim(); const slopeUser = parseNumber(slopeRaw); let slopeOk = false; if (!slopeRaw) setFeedback(slopeInput, 'Enter slope', false); else if (isNaN(slopeUser)) setFeedback(slopeInput, 'Invalid number', false); else { slopeOk = nearlyEqual(slopeUser, state.m); setFeedback(slopeInput, slopeOk ? `Correct: m = ${formatM(state.m)}` : `Wrong — expected ${formatM(state.m)}`, slopeOk); }
+  const interceptRaw = interceptInput.value.trim(); const cUser = parseNumber(interceptRaw); let interceptOk = false; if (!interceptRaw) setFeedback(interceptInput, 'Enter y-intercept', false); else if (isNaN(cUser)) setFeedback(interceptInput, 'Invalid number', false); else { interceptOk = nearlyEqual(cUser, state.c); setFeedback(interceptInput, interceptOk ? `Correct: c = ${formatC(state.c)}` : `Wrong — expected ${formatC(state.c)}`, interceptOk); }
+  const eqRaw = equationInput.value.trim(); const parsedEq = parseUserExpr(eqRaw); let eqOk = false; if (!eqRaw) setFeedback(equationInput, 'Enter equation (e.g. y = 2x + 3)', false); else if (!parsedEq.ok || parsedEq.type !== 'normal') setFeedback(equationInput, 'Could not parse equation', false); else { if (nearlyEqual(parsedEq.m, state.m) && nearlyEqual(parsedEq.c, state.c)) { eqOk = true; setFeedback(equationInput, `Equation correct: y = ${formatM(state.m)}x + ${formatC(state.c)}`, true); } else { setFeedback(equationInput, `Wrong — expected y = ${formatM(state.m)}x + ${formatC(state.c)}`, false); } }
+  const finalRaw = finalInput.value.trim(); const parsedFinal = parseUserExpr(finalRaw); let finalOk = false; if (!finalRaw) setFeedback(finalInput, 'Enter inequality (e.g. y ≥ 2x + 3)', false); else if (!parsedFinal.ok) setFeedback(finalInput, 'Could not parse inequality', false); else if (parsedFinal.type !== 'normal') setFeedback(finalInput, `Unexpected form. Expected: ${expectedIneqStr}`, false); else { if (nearlyEqual(parsedFinal.m, state.m) && nearlyEqual(parsedFinal.c, state.c)) { const op = parsedFinal.op; const expectedSign = state.shade === 'above' ? '>' : '<'; const expectedOp = state.lineType === 'solid' ? expectedSign + '=' : expectedSign; if (expectedOp === '>=') finalOk = (op === '>=' || op === '>'); else if (expectedOp === '<=') finalOk = (op === '<=' || op === '<'); else finalOk = (op === expectedOp); setFeedback(finalInput, finalOk ? 'Inequality correct' : `Wrong — expected: ${expectedIneqStr}`, finalOk); } else { setFeedback(finalInput, `Wrong slope/intercept. Expected: ${expectedIneqStr}`, false); } }
+  const typeOk = uiLine.value === state.lineType ; setFeedback(uiLine, typeOk ? `Line type correct (${state.lineType})` : `Line type wrong — expected ${state.lineType}`, typeOk);
+  const shadeOk = uiShade.value === state.shade ; setFeedback(uiShade, shadeOk ? `Shade correct (${state.shade})` : `Shade wrong — expected ${state.shade}`, shadeOk);
+  const allOk = slopeOk && interceptOk && eqOk && finalOk && typeOk && shadeOk;
+  results.innerHTML = allOk ? `<div class="ok text-green-700 font-bold">All answers correct — well done!</div>` : `<div class="bad text-red-600 font-bold">Some items are incorrect — see the inline feedback next to each field.</div>`;
+}
+
+/* ---------- UI wiring ---------- */
+document.getElementById('btn-new').addEventListener('click', newRandomInequality);
+document.getElementById('btn-check').addEventListener('click', checkAnswers);
+document.getElementById('btn-redraw').addEventListener('click', redraw);
+document.getElementById('btn-show').addEventListener('click', ()=>{ alert('Correct inequality: ' + (state.shade === 'above' ? (state.lineType==='solid' ? 'y ≥ ' : 'y > ') : (state.lineType==='solid' ? 'y ≤ ' : 'y < ')) + formatM(state.m) + 'x + ' + formatC(state.c)); });
+document.getElementById('btn-redo').addEventListener('click', ()=>{ newRandomInequality(); });
+// initial
+newRandomInequality();
+</script>
+</body>
+</html>

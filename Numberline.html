@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Number Line</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .card {
+      border-radius: 1.5rem;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      transition: transform .2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
+    .btn {
+      background: #4f46e5;
+      color: white;
+      font-weight: 600;
+      padding: 12px;
+      border-radius: 1rem;
+      transition: all .3s ease;
+      text-align: center;
+      width: 100%;
+    }
+    .btn:hover {
+      background: #4338ca;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(79,70,229,0.4);
+    }
+    .floating-label {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .floating-label input,
+    .floating-label textarea,
+    .floating-label select {
+      width: 100%;
+      padding: 14px 12px;
+      border-radius: 1rem;
+      border: 2px solid rgba(0,0,0,0.08);
+      background: #fff;
+      outline: none;
+    }
+    .floating-label label {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: #6b7280;
+      transition: all .2s ease;
+      pointer-events: none;
+    }
+    .floating-label input:focus + label,
+    .floating-label input:not(:placeholder-shown) + label,
+    .floating-label textarea:focus + label,
+    .floating-label textarea:not(:placeholder-shown) + label,
+    .floating-label select:focus + label {
+      top: 8px;
+      font-size: 0.75rem;
+      color: #4f46e5;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+ 
+<div class="w-full max-w-5xl space-y-6 mx-auto my-10">
+  <header class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+    <h1 class="text-3xl font-bold">Inequalities Worksheet</h1>
+    <p class="text-indigo-100 mt-1">Interactive checks for line type, shading and table values — now with a modern UI.</p>
+  </header>
+</div>
+
+
+  <!-- Number Line Card -->
+  <div class="card bg-indigo-50 w-full max-w-3xl mb-8">
+    <h2 class="text-xl font-bold text-indigo-700 mb-4">📏 Number Line</h2>
+	
+
+    <label for="leftType">Left Endpoint</label>
+    <div class="floating-label">
+      <select id="leftType">
+        <option value="closed" selected>Closed (•)</option>
+        <option value="open">Open (○)</option>
+        <option value="neg_inf">-∞</option>
+      </select>
+      
+    </div>
+
+    <div class="floating-label">
+      <input id="leftVal" type="number" value="-2" placeholder=" " />
+      <label for="leftVal">Left Value</label>
+    </div>
+    
+
+    <label for="rightType">Right Endpoint</label>
+    <div class="floating-label">
+      <select id="rightType">
+        <option value="closed" selected>Closed (•)</option>
+        <option value="open">Open (○)</option>
+        <option value="pos_inf">+∞</option>
+      </select>
+      
+    </div>
+    
+    <div class="floating-label">
+      <input id="rightVal" type="number" value="3" placeholder=" " />
+      <label for="rightVal">Right Value</label>
+    </div>
+
+
+    <label for="leftType">Number line Scale</label>
+    <div class="floating-label">
+      <input id="minInput" type="number" value="-10" placeholder=" " />
+      <label for="minInput">Scale Min</label>
+    </div>
+
+    <div class="floating-label">
+      <input id="maxInput" type="number" value="10" placeholder=" " />
+      <label for="maxInput">Scale Max</label>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4 mt-4">
+      <button id="drawInterval" class="btn">Generate Answer</button>
+      <button id="rescale" class="btn bg-gray-500 hover:bg-gray-600">Apply Scale</button>
+    </div>
+
+    <div class="overflow-x-auto border rounded-xl bg-white p-2 mt-4">
+      <svg id="numline" height="150"></svg>
+    </div>
+
+    <div id="intervalAnswer" class="mt-6 p-4 rounded-xl bg-white border border-indigo-100 text-gray-800">
+      Answer will appear here.
+    </div>
+  </div>
+
+  <!-- Set Analyzer Card -->
+  <div class="card bg-pink-50 w-full max-w-3xl">
+    <h2 class="text-xl font-bold text-pink-700 mb-4">📚 Set Analyzer</h2>
+    <div class="floating-label mb-6">
+      <textarea id="setInput" rows="3" placeholder=" "></textarea>
+      <label for="setInput">Enter a set (e.g. {1,2,3} or {-1,-2,...})</label>
+    </div>
+    <button id="parseSetBtn" class="btn">Generate Answer</button>
+    <div id="setAnswer" class="mt-6 p-4 rounded-xl bg-white border border-pink-100 text-gray-800">
+      Answer will appear here.
+    </div>
+  </div>
+
+<script>
+/* ===== Number Line Setup ===== */
+const svg = document.getElementById('numline');
+let minX = -10, maxX = 10;
+const stepPx = 50; // spacing per unit
+
+function create(tag){return document.createElementNS('http://www.w3.org/2000/svg', tag);}
+function line(x1,y1,x2,y2,sw,stroke){
+  const l=create('line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  l.setAttribute('stroke',stroke);l.setAttribute('stroke-width',sw);
+  l.setAttribute('stroke-linecap','round');return l;}
+function circle(cx,cy,r,fill,stroke,sw){
+  const c=create('circle');
+  c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',r);
+  if(fill) c.setAttribute('fill',fill);
+  if(stroke) c.setAttribute('stroke',stroke);
+  if(sw) c.setAttribute('stroke-width',sw);return c;}
+function textEl(x,y,txt){
+  const t=create('text');
+  t.setAttribute('x',x);t.setAttribute('y',y);
+  t.setAttribute('font-size',12);
+  t.setAttribute('text-anchor','middle');
+  t.setAttribute('fill','black'); t.textContent=txt; return t;}
+
+function clearSVG(){ svg.innerHTML=''; }
+function toX(val){ return 40 + (val - minX) * stepPx; }
+
+function drawBase(){
+  clearSVG();
+  const count = maxX - minX;
+  svg.setAttribute("width", 80 + count * stepPx);
+  const g=create('g'); svg.appendChild(g);
+  const y=80;
+  g.appendChild(line(40,y, svg.width.baseVal.value-40, y,2,'black'));
+  for(let i=minX; i<=maxX; i++){
+    const x = 40 + (i - minX) * stepPx;
+    g.appendChild(line(x,y-6,x,y+6,1,'black'));
+    g.appendChild(textEl(x,y+20,i));
+  }
+}
+
+function renderInterval(left,right,leftClosed,rightClosed,leftInf,rightInf){
+  drawBase();
+  const y=80;
+  let aX = leftInf ? 40 : toX(left);
+  let bX = rightInf ? 40 + (maxX - minX) * stepPx : toX(right);
+  svg.appendChild(line(aX,y,bX,y,4,'black'));
+
+  if(leftInf){
+    const arr=create('path');
+    arr.setAttribute('d',`M60 ${y-6} L40 ${y} L60 ${y+6}`);
+    arr.setAttribute('fill','none'); arr.setAttribute('stroke','black'); arr.setAttribute('stroke-width','2');
+    svg.appendChild(arr);
+  }
+  if(rightInf){
+    const arr=create('path');
+    arr.setAttribute('d',`M${bX-20} ${y-6} L${bX} ${y} L${bX-20} ${y+6}`);
+    arr.setAttribute('fill','none'); arr.setAttribute('stroke','black'); arr.setAttribute('stroke-width','2');
+    svg.appendChild(arr);
+  }
+
+  if(!leftInf){
+    svg.appendChild(leftClosed?circle(aX,y,7,'black'):circle(aX,y,7,'transparent','black',2));
+    svg.appendChild(textEl(aX,y-15,left));
+  }
+  if(!rightInf){
+    svg.appendChild(rightClosed?circle(bX,y,7,'black'):circle(bX,y,7,'transparent','black',2));
+    svg.appendChild(textEl(bX,y-15,right));
+  }
+}
+drawBase();
+
+document.getElementById('drawInterval').addEventListener('click',()=>{
+  const lType=document.getElementById('leftType').value;
+  const rType=document.getElementById('rightType').value;
+  const leftInf=lType==='neg_inf';
+  const rightInf=rType==='pos_inf';
+  const left = leftInf?null:Math.round(Number(document.getElementById('leftVal').value));
+  const right= rightInf?null:Math.round(Number(document.getElementById('rightVal').value));
+  const leftClosed=lType==='closed';
+  const rightClosed=rType==='closed';
+  renderInterval(left,right,leftClosed,rightClosed,leftInf,rightInf);
+
+  let ans='';
+  if(leftInf && rightInf) ans='x ∈ ℤ (all integers)';
+  else if(leftInf) ans=`x ${rightClosed?'≤':'<'} ${right}`;
+  else if(rightInf) ans=`x ${leftClosed?'>=':'>'} ${left}`;
+  else ans=`${left} ${leftClosed?'≤':'<'} x ${rightClosed?'≤':'<'} ${right}`;
+  document.getElementById('intervalAnswer').textContent=ans;
+});
+
+document.getElementById('rescale').addEventListener('click',()=>{
+  minX = Math.round(Number(document.getElementById('minInput').value));
+  maxX = Math.round(Number(document.getElementById('maxInput').value));
+  if(maxX<=minX){ alert('Max must be greater than Min'); return; }
+  drawBase();
+});
+
+/* === Hide numeric inputs when infinity is chosen === */
+const leftTypeSel  = document.getElementById('leftType');
+const rightTypeSel = document.getElementById('rightType');
+const leftVal      = document.getElementById('leftVal');
+const rightVal     = document.getElementById('rightVal');
+
+function toggleInputs(){
+  leftVal.style.display  = (leftTypeSel.value==='neg_inf') ? 'none' : 'block';
+  rightVal.style.display = (rightTypeSel.value==='pos_inf') ? 'none' : 'block';
+}
+leftTypeSel.addEventListener('change',toggleInputs);
+rightTypeSel.addEventListener('change',toggleInputs);
+toggleInputs();
+
+/* ===== Set Analyzer ===== */
+function parseSetString(str){
+  if(!str) return {msg:'Empty'};
+  str=str.replace(/\s+/g,'');
+  const brace = str.match(/\{(.+)\}/);
+  if(brace) str=brace[1];
+  const parts=str.split(',').filter(Boolean).map(v=>v.replace(/\.\.\.?/g,'...'));
+  return parts;
+}
+function analyzeSet(parts){
+  let nums=[]; let hasEllipsis=false;
+  for(let p of parts){
+    if(p==='...'){hasEllipsis=true;continue;}
+    if(p.includes('...')){ let n=parseFloat(p); if(!isNaN(n)) nums.push(n); hasEllipsis=true;}
+    else { let n=parseFloat(p); if(!isNaN(n)) nums.push(n); }
+  }
+  nums.sort((a,b)=>a-b);
+  let answers=[];
+  if(hasEllipsis && nums.length>0){
+    const asc = parts[parts.length-1]==='...';
+    if(asc){ let start=nums[0]; answers.push(`x ≥ ${start}`); answers.push(`x > ${start-1}`);}
+    else { let end=nums[nums.length-1]; answers.push(`x ≤ ${end}`); answers.push(`x < ${end+1}`);}
+  } else if(nums.length>0){
+    const min=nums[0], max=nums[nums.length-1];
+    answers.push(`x ∈ {${nums.join(', ')}}`);
+    if(nums.length>1) answers.push(`${min} ≤ x < ${max+1}`);
+    else answers.push(`x = ${min}`);
+  } else { answers.push('Could not parse set.'); }
+  return answers;
+}
+document.getElementById('parseSetBtn').addEventListener('click',()=>{
+  const parts=parseSetString(document.getElementById('setInput').value);
+  const out=analyzeSet(parts);
+  document.getElementById('setAnswer').innerHTML = out.map(a=>`<div>${a}</div>`).join('');
+});
+</script>
+</body>
+</html>

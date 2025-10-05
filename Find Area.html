@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi Inequality Grapher</title>
+<script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+
+.sym-btn {
+  @apply px-3 py-[0.65rem] rounded-lg border leading-none; /* Tailwind’s @apply works since you load Tailwind */
+}
+/* Floating label */
+.floating-label {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.floating-label input,
+.floating-label textarea,
+.floating-label select {
+  width: 100%;
+  padding: 14px 12px;
+  border-radius: 1rem;
+  border: 2px solid rgba(0,0,0,0.08);
+  background: #fff;
+  outline: none;
+}
+.floating-label label {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  color: #6b7280;
+  transition: all .2s ease;
+  pointer-events: none;
+}
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label,
+.floating-label textarea:focus + label,
+.floating-label textarea:not(:placeholder-shown) + label,
+.floating-label select:focus + label,
+.floating-label select:not([value=""]) + label {
+  top: 0.25rem;
+  font-size: 0.75rem;
+  color: #4f46e5;
+}
+
+
+
+</style>
+</head>
+
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4">
+
+<div class="w-full max-w-5xl mx-auto p-4 space-y-6">
+  
+  <header class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+      <h1 class="text-3xl font-bold">Inequalities Worksheet</h1>
+      <p class="text-indigo-100 mt-1">Interactive checks for line type, shading and table values — now with a modern UI.</p>
+    </header>
+
+  <!-- Step 0: Ask how many -->
+  <div id="setupBox" class="bg-indigo-50 rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">How many inequalities do you want to enter?</h2>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div class="floating-label flex-1">
+        <input id="ineqCount" type="number" min="1" value="1" placeholder=" " />
+        
+      </div>
+      <button onclick="generateInputs()" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-indigo-700 shadow-md transition-transform transform hover:-translate-y-1">OK</button>
+    </div>
+  </div>
+
+  <!-- Container for inequalities -->
+  
+  <div id="ineqContainer" class="space-y-4"></div>
+
+  <!-- Intersection Button -->
+  <div id="intersectionBox" class="hidden mt-6">
+    <button onclick="findIntersection()" class="bg-purple-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-purple-700 shadow-md transition-transform transform hover:-translate-y-1">
+      Find Intersection Area
+    </button>
+  </div>
+
+  <!-- Graph -->
+  <div class="w-full bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div id="ggb-element" class="aspect-video"></div>
+  </div>
+
+
+  <!-- Test Point -->
+  <div class="bg-white rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">Test a Point</h2>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="floating-label">
+        <input id="px" type="number" value="0" placeholder=" " />
+        <label for="px">x</label>
+      </div>
+      <div class="floating-label">
+        <input id="py" type="number" value="0" placeholder=" " />
+        <label for="py">y</label>
+      </div>
+    </div>
+    <button onclick="checkPointAll()" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-green-700 shadow-md transition-transform transform hover:-translate-y-1">Check</button>
+    <div id="pointResult" class="mt-4 text-gray-800"></div>
+  </div>
+
+</div>
+
+<script>
+/* ===== GeoGebra ===== */
+let ggb;
+const ggbApp = new GGBApplet({
+  appName: "graphing",
+  width: 975,      // baseline, will be ignored
+  height: 450,
+  showToolBar: false,
+  showAlgebraInput: false,
+  showMenuBar: false,
+  appletOnLoad: api => ggb = api
+}, true);
+
+window.addEventListener("load", () => ggbApp.inject('ggb-element'));
+
+/* ===== Parser ===== */
+function parseIneq(raw) {
+  if (!raw) return null;
+  raw = raw.replace(/≤/g,"<=").replace(/≥/g,">=").replace(/\s+/g,"").trim();
+  const m = raw.match(/(.+?)(<=|>=|<|>)(.+)/);
+  if (!m) return null;
+  return { lhs:m[1], op:m[2], rhs:m[3], raw };
+}
+function prepareExpr(expr) {
+  return expr.replace(/\^/g,"**").replace(/([0-9])([a-zA-Z\(])/g,"$1*$2").replace(/([a-zA-Z\)])([0-9\(])/g,"$1*$2");
+}
+
+/* ===== Generate N inequalities ===== */
+function generateInputs() {
+  const N = parseInt(document.getElementById("ineqCount").value);
+  if (isNaN(N) || N<1) { alert("Enter a valid number >=1"); return; }
+  const container=document.getElementById("ineqContainer");
+  container.innerHTML="";
+  for(let i=0;i<N;i++){
+    container.appendChild(createBlock(i+1));
+  }
+  document.getElementById("intersectionBox").classList.remove("hidden");
+}
+
+/* ===== Create block for each inequality ===== */
+function createBlock(idx) {
+  const div=document.createElement("div");
+  div.className="bg-white shadow-xl rounded-2xl p-6 mb-6";
+  div.innerHTML=`
+    <h2 class="text-xl font-semibold mb-2">Inequality ${idx}</h2>
+    <div class="floating-label flex-1">
+      <input id="ineq${idx}" type="text" class="flex-1 p-2 border rounded-lg" placeholder="e.g. y < 2x+1 or x > 3" oninput="updateUI(${idx})">
+    </div>
+    <div class="floating-label flex-1">
+      <button onclick="insertSym(${idx},'≤')" class="sym-btn">≤</button>
+	<button onclick="insertSym(${idx},'≥')" class="sym-btn">≥</button>
+	<button onclick="insertSym(${idx},'<')" class="sym-btn">&lt;</button>
+	<button onclick="insertSym(${idx},'>')" class="sym-btn">&gt;</button>
+    </div>
+
+    <p id="tableDesc${idx}" class="text-gray-600 mb-2">Enter values for x; y will be calculated.</p>
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse border border-gray-300 text-center mb-4" id="table${idx}">
+        <thead><tr id="tableHeader${idx}" class="bg-gray-200">
+          <th class="border p-2">x</th>
+          <th class="border p-2">y</th>
+          <th class="border p-2">Action</th>
+        </tr></thead>
+        <tbody id="tableBody${idx}">
+          <tr>
+            <td><input type="number" class="w-full p-2 border rounded-lg" oninput="onValueChange(this,${idx})"></td>
+            <td class="border p-2 resultCell">—</td>
+            <td><button onclick="removeRow(this,${idx})" class="px-2 py-1 rounded-lg border">Delete</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="addBtns${idx}" class="flex gap-2 mb-4">
+      <button onclick="addRow(${idx})" class="bg-gray-600 text-white py-1 px-3 rounded-lg">+ Add Row</button>
+      <button onclick="refreshPoints(${idx})" class="bg-blue-500 text-white py-1 px-3 rounded-lg">Update Points → Graph</button>
+    </div>
+
+    <div class="bg-gray-50 border rounded-lg p-3 mb-4">
+      <strong>Points:</strong>
+      <div id="pointsList${idx}" class="mt-2 flex flex-wrap gap-2"></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <button onclick="drawBoundary(${idx})" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold">
+          Draw Line <span id="drawDetail${idx}" class="ml-2 font-mono bg-white text-indigo-600 px-2 py-1 rounded-lg">?</span>
+        </button>
+        <p id="drawDesc${idx}" class="text-sm text-gray-600 mt-2">Draws the boundary line.</p>
+      </div>
+      <div>
+        <button onclick="shadeRegion(${idx})" class="w-full bg-amber-600 text-white py-2 px-4 rounded-lg font-semibold">
+          Shade Area <span id="shadeDetail${idx}" class="ml-2 font-mono bg-white text-amber-700 px-2 py-1 rounded-lg">?</span>
+        </button>
+        <p id="shadeDesc${idx}" class="text-sm text-gray-600 mt-2">Shades the inequality region.</p>
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+/* ===== Helpers ===== */
+function insertSym(idx,sym){ 
+  const inp=document.getElementById("ineq"+idx); 
+  inp.value+=sym; inp.focus(); updateUI(idx); 
+}
+function addRow(idx){
+  const row=document.createElement("tr");
+  row.innerHTML=`<td><input type="number" class="w-full p-2 border rounded-lg" oninput="onValueChange(this,${idx})"></td>
+                 <td class="border p-2 resultCell">—</td>
+                 <td><button onclick="removeRow(this,${idx})" class="px-2 py-1 rounded-lg border">Delete</button></td>`;
+  document.getElementById("tableBody"+idx).appendChild(row);
+}
+function removeRow(btn,idx){ btn.closest("tr").remove(); refreshPoints(idx); }
+
+/* ===== Update UI per inequality ===== */
+function updateUI(idx){
+  const parsed=parseIneq(document.getElementById("ineq"+idx).value);
+
+  if(!parsed) {
+    document.getElementById("drawDetail"+idx).textContent = "?";
+    document.getElementById("shadeDetail"+idx).textContent = "?";
+    return;
+  }
+
+  const th=document.getElementById("tableHeader"+idx);
+  const desc=document.getElementById("tableDesc"+idx);
+  const table=document.getElementById("table"+idx);
+  const addBtns=document.getElementById("addBtns"+idx);
+
+  const rhsIsNum=!isNaN(+parsed.rhs);
+  const lhsX=parsed.lhs==="x";
+  const lhsY=parsed.lhs==="y";
+
+  if((lhsX||lhsY)&&rhsIsNum){
+    table.style.display="none";
+    addBtns.style.display="none";
+    desc.textContent=`This is a ${lhsX?"vertical":"horizontal"} line at ${parsed.lhs}=${parsed.rhs}. No table needed.`;
+  } else {
+    table.style.display="";
+    addBtns.style.display="flex";
+    if(parsed.lhs.startsWith("y")){
+      th.innerHTML="<th class='border p-2'>x</th><th class='border p-2'>y</th><th class='border p-2'>Action</th>";
+      desc.textContent="Enter values for x; y will be calculated.";
+    } else {
+      th.innerHTML="<th class='border p-2'>y</th><th class='border p-2'>x</th><th class='border p-2'>Action</th>";
+      desc.textContent="Enter values for y; x will be calculated.";
+    }
+  }
+
+  document.getElementById("drawDetail"+idx).textContent=parsed.op;
+  document.getElementById("shadeDetail"+idx).textContent=parsed.op;
+
+  if(lhsX){
+    const side = parsed.op.includes(">") ? "right" : "left";
+    const inc = parsed.op.includes("=") ? " (including the line)" : "";
+    document.getElementById("drawDesc"+idx).textContent="Draws a vertical line at x=...";
+    document.getElementById("shadeDesc"+idx).textContent=`Shades region ${side} of the line${inc}.`;
+  } else if(lhsY){
+    const side = parsed.op.includes(">") ? "above" : "below";
+    const inc = parsed.op.includes("=") ? " (including the line)" : "";
+    document.getElementById("drawDesc"+idx).textContent="Draws a horizontal line at y=...";
+    document.getElementById("shadeDesc"+idx).textContent=`Shades region ${side} the line${inc}.`;
+  } else {
+    const side = parsed.op.includes(">") ? "above" : "below";
+    const inc = parsed.op.includes("=") ? " (including the line)" : "";
+    document.getElementById("drawDesc"+idx).textContent="Draws a slope line y=...";
+    document.getElementById("shadeDesc"+idx).textContent=`Shades region ${side} the line${inc}.`;
+  }
+}
+
+/* ===== Auto compute cells ===== */
+function onValueChange(inp,idx){
+  const parsed=parseIneq(document.getElementById("ineq"+idx).value);
+  if(!parsed) return;
+  const row=inp.closest("tr"); const cell=row.querySelector(".resultCell");
+  const val=+inp.value; if(isNaN(val)){ cell.textContent="—"; refreshPoints(idx); return; }
+  try{
+    let expr,out;
+    if(parsed.lhs.startsWith("y")){ expr=prepareExpr(parsed.rhs).replace(/x/g,`(${val})`); out=eval(expr);}
+    else { expr=prepareExpr(parsed.rhs).replace(/y/g,`(${val})`); out=eval(expr);}
+    cell.textContent=isFinite(out)?out.toFixed(3):"Err";
+  }catch{cell.textContent="Err";}
+  refreshPoints(idx);
+}
+
+/* ===== Refresh points ===== */
+function refreshPoints(idx){
+  const parsed=parseIneq(document.getElementById("ineq"+idx).value); if(!parsed) return;
+  const rows=document.querySelectorAll("#tableBody"+idx+" tr");
+  const pts=[];
+  rows.forEach(tr=>{
+    const inp=tr.querySelector("input"); const res=tr.querySelector(".resultCell").textContent;
+    if(parsed.lhs.startsWith("y")){ const x=+inp.value,y=+res; if(!isNaN(x)&&!isNaN(y)) pts.push([x,y]);}
+    else { const y=+inp.value,x=+res; if(!isNaN(x)&&!isNaN(y)) pts.push([x,y]);}
+  });
+  const list=document.getElementById("pointsList"+idx); list.innerHTML="";
+  if(pts.length===0) list.innerHTML="<span class='text-gray-500'>— no points —</span>";
+  pts.forEach(pt=>{const chip=document.createElement("div");chip.className="px-3 py-1 bg-white border rounded-lg shadow-sm text-sm";chip.textContent=`(${pt[0]},${pt[1]})`;list.appendChild(chip);});
+  pts.forEach((pt,i)=>ggb.evalCommand(`P${idx}_${i+1}=(${pt[0]},${pt[1]})`));
+}
+
+/* ===== Draw & Shade ===== */
+function drawBoundary(idx){
+  const parsed=parseIneq(document.getElementById("ineq"+idx).value); if(!parsed)return;
+  const name=`L${idx}`;
+  try{ggb.evalCommand(`Delete[${name}]`);}catch{}
+  ggb.evalCommand(`${name}: ${parsed.lhs}=${parsed.rhs}`);
+  const style=(parsed.op===">"||parsed.op==="<")?2:0;
+  try{ggb.setLineStyle(name,style); ggb.setLineThickness(name,3);}catch{}
+}
+function shadeRegion(idx){
+  const raw = document.getElementById("ineq"+idx).value;
+  const parsed = parseIneq(raw); 
+  if(!parsed) return;
+
+  let ggbExpr = `${parsed.lhs}${parsed.op}${parsed.rhs}`;
+  ggbExpr = ggbExpr.replace(/<=/g,"≤").replace(/>=/g,"≥");
+
+  const name=`R${idx}`;
+  try{ ggb.evalCommand(`Delete[${name}]`);}catch{}
+  try{ ggb.evalCommand(`${name}: ${ggbExpr}`); }
+  catch{ ggb.evalCommand(ggbExpr); }
+}
+
+/* ===== Find intersection ===== */
+function findIntersection(){
+  const N=parseInt(document.getElementById("ineqCount").value);
+  let exprs=[];
+  for(let i=1;i<=N;i++){
+    const parsed=parseIneq(document.getElementById("ineq"+i).value);
+    if(parsed){
+      let e = `${parsed.lhs}${parsed.op}${parsed.rhs}`;
+      e = e.replace(/<=/g,"≤").replace(/>=/g,"≥");
+      exprs.push(e);
+    }
+  }
+  if(exprs.length===0){ alert("No valid inequalities"); return; }
+  const cmd=exprs.join(" ∧ ");
+  try{ ggb.evalCommand(`IntersectRegion=(${cmd})`);}catch{alert("Error computing intersection");}
+}
+
+/* ===== Test a point ===== */
+function checkPointAll(){
+  const px=+document.getElementById("px").value, py=+document.getElementById("py").value;
+  const N=parseInt(document.getElementById("ineqCount").value);
+  const container=document.getElementById("pointResult"); container.innerHTML="";
+  for(let i=1;i<=N;i++){
+    const parsed=parseIneq(document.getElementById("ineq"+i).value); if(!parsed)continue;
+    try{
+      const expr=prepareExpr(parsed.lhs+parsed.op+parsed.rhs).replace(/x/g,`(${px})`).replace(/y/g,`(${py})`);
+      const ok=eval(expr);
+      const d=document.createElement("div");
+      d.textContent=`Inequality ${i} (${parsed.raw}): ${ok?"✅ true":"❌ false"}`;
+      container.appendChild(d);
+    }catch{}
+  }
+}
+</script>
+</body>
+</html>

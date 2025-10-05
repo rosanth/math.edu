@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inequality Grapher</title>
+  <script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Floating label */
+    .floating-label {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .floating-label input,
+    .floating-label textarea,
+    .floating-label select {
+      width: 100%;
+      padding: 14px 12px;
+      border-radius: 1rem;
+      border: 2px solid rgba(0,0,0,0.08);
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .floating-label label {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: #6b7280;
+      transition: all .18s ease;
+      pointer-events: none;
+    }
+    .floating-label input:focus + label,
+    .floating-label input:not(:placeholder-shown) + label,
+    .floating-label textarea:focus + label,
+    .floating-label textarea:not(:placeholder-shown) + label,
+    .floating-label select:focus + label,
+    .floating-label select:not([value=""]) + label {
+      top: 0.25rem;
+      font-size: 0.75rem;
+      color: #4f46e5;
+    }
+    /* small responsive tweaks */
+    .rounded-2xl { border-radius: 1.25rem; }
+    .shadow-lg { box-shadow: 0 10px 25px rgba(2,6,23,0.08); }
+    .shadow-md { box-shadow: 0 6px 18px rgba(2,6,23,0.06); }
+    button { cursor: pointer; }
+    /* ensure graph container scales nicely */
+    #ggb-element { width: 100%; height: 100%; min-height: 340px; }
+    .aspect-video { aspect-ratio: 16/9; }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4">
+
+<div class="w-full max-w-5xl mx-auto p-4 space-y-6">
+	
+  <header class="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+      <h1 class="text-3xl font-bold">நிறம் தீட்டப்பட்ட பிரதேசத்திற்குரிய சமனிலியினை கண்டறிதல்</h1>
+      <p class="text-indigo-100 mt-1">Interactive checks for line type, shading and table values — now with a modern UI.</p>
+    </header>
+	
+  
+
+  <!-- STEP 1 -->
+  <div class="bg-yellow-50 rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">1️⃣ இரண்டு புள்ளிகள் &amp; கோட்டுச் சமன்பாடு</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="floating-label">
+        <input id="x1" type="number" placeholder=" " />
+        <label for="x1">x₁</label>
+      </div>
+      <div class="floating-label">
+        <input id="y1" type="number" placeholder=" " />
+        <label for="y1">y₁</label>
+      </div>
+      <div class="floating-label">
+        <input id="x2" type="number" placeholder=" " />
+        <label for="x2">x₂</label>
+      </div>
+      <div class="floating-label">
+        <input id="y2" type="number" placeholder=" " />
+        <label for="y2">y₂</label>
+      </div>
+    </div>
+    <button onclick="findFormula()" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-indigo-700 shadow-md transition-transform transform hover:-translate-y-1 mt-4">Find Formula</button>
+    <div id="formulaResult" class="mt-4"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="bg-white rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">2️⃣ Shade → Strict Inequality</h2>
+    <div class="floating-label">
+      <select id="shade" placeholder=" ">
+        <option value="" hidden>— Shade தேர்வு —</option>
+        <option value="above">கோட்டின் மேற்புறம்</option>
+        <option value="below">கோட்டின் கீழப்புறம்</option>
+      </select>
+      <label for="shade">Shade</label>
+    </div>
+    <button onclick="generateFromShade()" class="bg-orange-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-orange-700 shadow-md transition-transform transform hover:-translate-y-1">Generate from Shade</button>
+    <div id="shadeResult" class="mt-4"></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="bg-white rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">3️⃣ Line Type → ≥ / ≤ or > / &lt;</h2>
+    <div class="floating-label">
+      <select id="lineStyle" placeholder=" ">
+        <option value="" hidden>— கோட்டின் வகை —</option>
+        <option value="solid">நேர்கோடு (≥ or ≤)</option>
+        <option value="dashed">புள்ளிக்கோடு (> or <)</option>
+      </select>
+      <label for="lineStyle">Line Type</label>
+    </div>
+    <button onclick="generateFromLineType()" class="bg-teal-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-teal-700 shadow-md transition-transform transform hover:-translate-y-1">Generate from Line Type</button>
+    <div id="lineTypeResult" class="mt-4"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="bg-white rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">4️⃣ Draw on Graph</h2>
+    <button onclick="drawLine()" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl w-full text-center hover:bg-blue-700 shadow-md transition-transform transform hover:-translate-y-1">சமனிலியினை வரைக</button>
+    <div id="calc1" class="space-y-4 mt-4"></div>
+  </div>
+
+  <!-- Graph -->
+  <div class="w-full bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div id="ggb-element" class="aspect-video"></div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="bg-white rounded-2xl p-6 shadow-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">5️⃣ சோதனை புள்ளி</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="floating-label">
+        <input id="px" type="number" value="0" placeholder=" " />
+        <label for="px">x</label>
+      </div>
+      <div class="floating-label">
+        <input id="py" type="number" value="0" placeholder=" " />
+        <label for="py">y</label>
+      </div>
+    </div>
+    <button onclick="checkPoint()" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-xl w-full sm:w-auto text-center hover:bg-green-700 shadow-md transition-transform transform hover:-translate-y-1">Check</button>
+    <div id="pointResult" class="mt-4 text-gray-800"></div>
+  </div>
+
+</div>
+
+<!-- ==== JS (inequality logic + GeoGebra) ==== -->
+<script>
+  // GeoGebra setup
+  let ggb;
+  const ggbApp = new GGBApplet({
+    appName: "graphing",
+    width: 975,
+    height: 450,
+    showToolBar: false,
+    showAlgebraInput: false,
+    showMenuBar: false,
+    appletOnLoad: api => ggb = api
+  }, true);
+
+  window.addEventListener("load", () => ggbApp.inject('ggb-element'));
+
+  // ---------- utility ----------
+  function fmt(n) {
+    if (n === null || n === undefined) return "";
+    if (!isFinite(n)) return String(n);
+    if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+    return Number.parseFloat(n.toFixed(6)).toString();
+  }
+
+  function computeLineFromPoints(x1n, y1n, x2n, y2n) {
+    if (x1n === x2n) {
+      return { vertical: true, xVal: x1n, m: null, c: null };
+    } else {
+      const m = (y2n - y1n) / (x2n - x1n);
+      const c = y1n - m * x1n;
+      return { vertical: false, xVal: null, m: m, c: c };
+    }
+  }
+
+  // ---------- Find Formula ----------
+  function findFormula() {
+    const x1 = document.getElementById("x1").value;
+    const y1 = document.getElementById("y1").value;
+    const x2 = document.getElementById("x2").value;
+    const y2 = document.getElementById("y2").value;
+
+    if (x1 === "" || y1 === "" || x2 === "" || y2 === "") {
+      alert("Please enter all coordinates (x₁, y₁, x₂, y₂).");
+      return;
+    }
+
+    const x1n = parseFloat(x1), y1n = parseFloat(y1), x2n = parseFloat(x2), y2n = parseFloat(y2);
+    if (![x1n, y1n, x2n, y2n].every(v => Number.isFinite(v))) {
+      alert("Only valid numbers are allowed for coordinates.");
+      return;
+    }
+    if (x1n === x2n && y1n === y2n) {
+      alert("Choose two different points (they cannot be identical).");
+      return;
+    }
+
+    const info = computeLineFromPoints(x1n, y1n, x2n, y2n);
+    let html = `<div class="shadow-md rounded-xl p-4">`;
+    html += `<h3 class="font-semibold text-lg mb-2">Formula of Line</h3>`;
+
+    if (info.vertical) {
+      html += `<p><b>Vertical line:</b> x = ${fmt(info.xVal)}</p>`;
+    } else {
+      html += `<p>m = (y₂ - y₁) / (x₂ - x₁)</p>`;
+      html += `<p>Substitute: m = (${fmt(y2n)} - ${fmt(y1n)}) / (${fmt(x2n)} - ${fmt(x1n)})</p>`;
+      html += `<p>Result: m = <b>${fmt(info.m)}</b></p>`;
+      html += `<p>c = y₁ - m × x₁ = <b>${fmt(info.c)}</b></p>`;
+      html += `<p class="mt-2"><b>Line:</b> y = ${fmt(info.m)}x + ${fmt(info.c)}</p>`;
+    }
+
+    html += `</div>`;
+    document.getElementById("formulaResult").innerHTML = html;
+  }
+
+  // ---------- Generate from Shade (strict) ----------
+  function generateFromShade() {
+    const x1 = document.getElementById("x1").value;
+    const y1 = document.getElementById("y1").value;
+    const x2 = document.getElementById("x2").value;
+    const y2 = document.getElementById("y2").value;
+    const shade = document.getElementById("shade").value;
+
+    if (x1 === "" || y1 === "" || x2 === "" || y2 === "") {
+      alert("Please enter both points first (for shade-based inequality).");
+      return;
+    }
+    if (!shade) {
+      alert("Please select shade area (above / below).");
+      return;
+    }
+
+    const x1n = parseFloat(x1), y1n = parseFloat(y1), x2n = parseFloat(x2), y2n = parseFloat(y2);
+    if (![x1n, y1n, x2n, y2n].every(v => Number.isFinite(v))) {
+      alert("Only valid numbers are allowed for coordinates.");
+      return;
+    }
+    if (x1n === x2n && y1n === y2n) {
+      alert("Choose two different points (they cannot be identical).");
+      return;
+    }
+
+    const info = computeLineFromPoints(x1n, y1n, x2n, y2n);
+    let ineq = "";
+    if (info.vertical) {
+      if (shade === "above") ineq = `x > ${fmt(info.xVal)}`;
+      else ineq = `x < ${fmt(info.xVal)}`;
+    } else {
+      if (shade === "above") ineq = `y > ${fmt(info.m)}x + ${fmt(info.c)}`;
+      else ineq = `y < ${fmt(info.m)}x + ${fmt(info.c)}`;
+    }
+
+    const html = `
+      <div class="shadow-md rounded-xl p-4">
+        <h3 class="font-semibold text-lg mb-2">Inequality from Shade (strict)</h3>
+        <p><b>${ineq}</b></p>
+        <p class="text-sm text-gray-600 mt-2">(Strict inequality — use line type to include equality.)</p>
+      </div>
+    `;
+    document.getElementById("shadeResult").innerHTML = html;
+  }
+
+  // ---------- Generate from Line Type (solid/dashed + shade) ----------
+  function generateFromLineType() {
+    const x1 = document.getElementById("x1").value;
+    const y1 = document.getElementById("y1").value;
+    const x2 = document.getElementById("x2").value;
+    const y2 = document.getElementById("y2").value;
+    const lineStyle = document.getElementById("lineStyle").value;
+    const shade = document.getElementById("shade").value;
+
+    if (x1 === "" || y1 === "" || x2 === "" || y2 === "") {
+      alert("Please enter both points first (for line-type based inequality).");
+      return;
+    }
+    if (!lineStyle) {
+      alert("Please select line type (solid / dashed).");
+      return;
+    }
+    if (!shade) {
+      alert("Please select shade area (above / below) as well — needed to decide ≥/≤ vs >/<.");
+      return;
+    }
+
+    const x1n = parseFloat(x1), y1n = parseFloat(y1), x2n = parseFloat(x2), y2n = parseFloat(y2);
+    if (![x1n, y1n, x2n, y2n].every(v => Number.isFinite(v))) {
+      alert("Only valid numbers are allowed for coordinates.");
+      return;
+    }
+    if (x1n === x2n && y1n === y2n) {
+      alert("Choose two different points (they cannot be identical).");
+      return;
+    }
+
+    const info = computeLineFromPoints(x1n, y1n, x2n, y2n);
+    let op = "?";
+    if (lineStyle === "solid" && shade === "above") op = "≥";
+    if (lineStyle === "solid" && shade === "below") op = "≤";
+    if (lineStyle === "dashed" && shade === "above") op = ">";
+    if (lineStyle === "dashed" && shade === "below") op = "<";
+
+    let ineq = "";
+    if (info.vertical) ineq = `x ${op} ${fmt(info.xVal)}`;
+    else ineq = `y ${op} ${fmt(info.m)}x + ${fmt(info.c)}`;
+
+    const html = `
+      <div class="shadow-md rounded-xl p-4">
+        <h3 class="font-semibold text-lg mb-2">Inequality from Line Type</h3>
+        <p><b>${ineq}</b></p>
+        <p class="text-sm text-gray-600 mt-2">(Generated using <b>${lineStyle}</b> + <b>${shade}</b>.)</p>
+      </div>
+    `;
+    document.getElementById("lineTypeResult").innerHTML = html;
+  }
+
+  // ---------- Draw line & shade on GeoGebra ----------
+  let currentEqn = "";
+  function drawLine() {
+    if (!ggb) { alert("GeoGebra not loaded yet."); return; }
+
+    const x1 = document.getElementById("x1").value;
+    const y1 = document.getElementById("y1").value;
+    const x2 = document.getElementById("x2").value;
+    const y2 = document.getElementById("y2").value;
+    const lineStyle = document.getElementById("lineStyle").value;
+    const shade = document.getElementById("shade").value;
+
+    if (x1 === "" || y1 === "" || x2 === "" || y2 === "") {
+      alert("தயவுசெய்து அனைத்து ஆள்கூறுகளையும் உள்ளிடுக (x₁, y₁, x₂, y₂).");
+      return;
+    }
+    if (shade === "") { alert("நிறம் தீட்டப்பட்ட பிரதேசத்தை (மேல் / கீழ்) தேர்வு செய்யவும்."); return; }
+    if (lineStyle === "") { alert("கோட்டின் வகையை (நேர்கோடு / புள்ளிக்கோடு) தேர்வு செய்யவும்."); return; }
+
+    const x1n = parseFloat(x1), y1n = parseFloat(y1), x2n = parseFloat(x2), y2n = parseFloat(y2);
+    if (isNaN(x1n) || isNaN(y1n) || isNaN(x2n) || isNaN(y2n)) { alert("எண்களை மட்டும் உள்ளிடுக."); return; }
+    if (x1n === x2n && y1n === y2n) { alert("இரண்டு வேறு புள்ளிகளை தேர்வு செய்யவும்."); return; }
+
+    let m, c;
+    if (x1n === x2n) { m = null; c = x1n; }
+    else { m = (y2n - y1n) / (x2n - x1n); c = y1n - m * x1n; }
+
+    // reset previous drawings
+    try { ggb.reset(); } catch (e) { /* ignore */ }
+
+    let eqn = "";
+    if (m === null) {
+      if (lineStyle === "solid" && shade === "above") eqn = `x >= ${fmt(c)}`;
+      if (lineStyle === "solid" && shade === "below") eqn = `x <= ${fmt(c)}`;
+      if (lineStyle === "dashed" && shade === "above") eqn = `x > ${fmt(c)}`;
+      if (lineStyle === "dashed" && shade === "below") eqn = `x < ${fmt(c)}`;
+    } else {
+      // use * for multiplication in GeoGebra command
+      const mStr = fmt(m);
+      const cStr = fmt(c);
+      if (lineStyle === "solid" && shade === "above") eqn = `y >= ${mStr}*x + ${cStr}`;
+      if (lineStyle === "solid" && shade === "below") eqn = `y <= ${mStr}*x + ${cStr}`;
+      if (lineStyle === "dashed" && shade === "above") eqn = `y > ${mStr}*x + ${cStr}`;
+      if (lineStyle === "dashed" && shade === "below") eqn = `y < ${mStr}*x + ${cStr}`;
+    }
+
+    currentEqn = eqn;
+    try { ggb.evalCommand(eqn); } catch (e) { try { ggb.evalCommand(eqn.replace(/>=/g,'≥').replace(/<=/g,'≤')); } catch(e2) {} }
+
+    // show steps m and c
+    const mHtml = `
+      <div class="shadow-md rounded-xl p-4">
+        <h3 class="font-semibold text-lg mb-2">m (slope)</h3>
+        <p>m = (y₂ - y₁) / (x₂ - x₁)</p>
+        <p>Substitute: m = (${fmt(y2n)} - ${fmt(y1n)}) / (${fmt(x2n)} - ${fmt(x1n)})</p>
+        <p>Result: m = ${m === null ? 'undefined (vertical line)' : '<b>' + fmt(m) + '</b>'}</p>
+      </div>
+    `;
+    const cHtml = `
+      <div class="shadow-md rounded-xl p-4">
+        <h3 class="font-semibold text-lg mb-2">c (y-intercept)</h3>
+        <p>c = y₁ - m × x₁</p>
+        <p>Substitute: c = ${fmt(y1n)} - (${m === null ? '—' : fmt(m)} × ${fmt(x1n)})</p>
+        <p>Result: c = <b>${fmt(c)}</b></p>
+      </div>
+    `;
+    document.getElementById("calc1").innerHTML = mHtml + cHtml + `<div class="p-2"><strong>Written inequality:</strong> <div class="font-mono mt-2">${eqn}</div></div>`;
+  }
+
+  // ---------- Check a point ----------
+  function checkPoint() {
+    if (!currentEqn) { alert("Please draw an inequality first."); return; }
+    const px = parseFloat(document.getElementById("px").value);
+    const py = parseFloat(document.getElementById("py").value);
+
+    // show point on GeoGebra
+    try { ggb.evalCommand(`P=(${fmt(px)},${fmt(py)})`); } catch(e){}
+
+    let result = false;
+    try {
+      // currentEqn has form like "y >= m*x + c" or "x > 3"
+      if (currentEqn.trim().startsWith("x")) {
+        const parts = currentEqn.split(" ");
+        const sign = parts[1];
+        const val = parseFloat(parts[2]);
+        if (sign === ">") result = px > val;
+        if (sign === ">=") result = px >= val;
+        if (sign === "<") result = px < val;
+        if (sign === "<=") result = px <= val;
+      } else {
+        // build rhs by replacing x with px
+        const parts = currentEqn.split(" ");
+        const sign = parts[1];
+        const rhs = parts.slice(2).join(" ").replace(/x/g, `(${px})`);
+        const rhsVal = eval(rhs.replace(/\*/g,'*'));
+        if (sign === ">") result = py > rhsVal;
+        if (sign === ">=") result = py >= rhsVal;
+        if (sign === "<") result = py < rhsVal;
+        if (sign === "<=") result = py <= rhsVal;
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error evaluating point against inequality.");
+      return;
+    }
+
+    document.getElementById("pointResult").innerHTML = `
+      <div class="shadow-md rounded-xl p-4">
+        <p>Point P(${fmt(px)}, ${fmt(py)}) → ${ result ? "<span style='color:green;font-weight:700'>TRUE ✅</span>" : "<span style='color:red;font-weight:700'>FALSE ❌</span>" }</p>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>

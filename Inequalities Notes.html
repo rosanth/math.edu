@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter Notes List</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f6f7fb;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      width: 90%;
+      max-width: 600px;
+      border-radius: 1.5rem;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      transition: transform .3s ease, box-shadow .3s ease;
+      background-color: white;
+      margin-bottom: 20px;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+    .btn {
+      background: #4f46e5;
+      color: white;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-radius: 1rem;
+      transition: all .3s ease;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #4338ca;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(79,70,229,0.4);
+    }
+    iframe {
+      border-radius: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="text-3xl font-bold text-center mb-8">📚 சமனிலிகள்</h1>
+
+  <!-- Chapter 1 -->
+  <div class="card bg-yellow-50">
+    <h2 class="text-xl font-bold text-yellow-700 mb-2 text-center">Module 1</h2>
+     <h2 class="text-xl font-bold text-yellow-700 mb-2 text-center">சமனிலிகள் அறிமுகம்</h2>
+    
+<p class="mb-6 text-gray-700 text-justify">
+    📖சமனிலி என்பது இரண்டு மதிப்புகள் அல்லது வெளிப்பாடுகளை குறியீடுகளைப் பயன்படுத்தி ஒப்பிட்டு, 
+    அவை சமமானவை அல்ல, ஆனால் ஒன்று மற்றொன்றை விட பெரியது அல்லது சிறியது என்பதைக் காட்டும் 
+    ஒரு கணிதக் கூற்று ஆகும்.
+ </p>
+
+  <!-- குறியீடுகள் Table -->
+<main class="max-w-4xl mx-auto">
+  <section class="bg-white shadow rounded-lg p-5 mb-6">
+    <h3 class="text-base font-semibold mb-2 text-green-700">குறியீடுகள்</h3>
+    <div class="overflow-x-auto">
+  
+  <table class="min-w-full border border-gray-300 mb-8">
+    <thead class="bg-purple-200">
+      <tr>
+        <th class="px-4 py-2 border">குறியீடு</th>
+        <th class="px-4 py-2 border">அர்த்தம்</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white">
+      <tr>
+        <td class="px-4 py-2 border text-lg">&gt;</td>
+        <td class="px-4 py-2 border">பெரிது</td>
+      </tr>
+      <tr class="bg-purple-50">
+        <td class="px-4 py-2 border text-lg">&lt;</td>
+        <td class="px-4 py-2 border">சிறிது</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 border text-lg">&ge;</td>
+        <td class="px-4 py-2 border">பெரிதும் சமனும்</td>
+      </tr>
+      <tr class="bg-purple-50">
+        <td class="px-4 py-2 border text-lg">&le;</td>
+        <td class="px-4 py-2 border">சிறிதும் சமனும்</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+  </section>
+</main>
+ <!-- சமனிலிகளை வாசித்தல் Table -->
+<main class="max-w-4xl mx-auto">
+  <section class="bg-white shadow rounded-lg p-5 mb-6">
+    <h3 class="text-base font-semibold mb-2 text-green-700">சமனிலிகளை வாசித்தல்</h3>
+    <div class="overflow-x-auto">
+<div class="overflow-x-auto mb-4">  
+<table class="min-w-full border border-gray-300">
+    <thead class="bg-purple-200">
+      <tr>
+        <th class="px-4 py-2 border">சமனிலி</th>
+        <th class="px-4 py-2 border">வாசிப்பு</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white">
+      <tr>
+        <td class="px-4 py-2 border">X &gt; 3</td>
+        <td class="px-4 py-2 border">X பெரிது 3</td>
+      </tr>
+      <tr class="bg-purple-50">
+        <td class="px-4 py-2 border">X &lt; 5</td>
+        <td class="px-4 py-2 border">X சிறிது 5</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 border">Y &ge; 10</td>
+        <td class="px-4 py-2 border">Y பெரிதும் சமனும் 10</td>
+      </tr>
+      <tr class="bg-purple-50">
+        <td class="px-4 py-2 border">Y &le; 20</td>
+        <td class="px-4 py-2 border">Y சிறிதும் சமனும் 20</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+  </section>
+</main>
+
+  
+    <div class="aspect-w-16 aspect-h-9 mb-4">
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen class="w-full h-full"></iframe>
+    </div>
+    
+  </div>
+
+
+
+  <!-- ---------------------------------------------------------------Chapter 2--------------------------------------------------------------------------- -->
+  <div class="card bg-green-50">
+    <h2 class="text-xl font-bold text-green-700 mb-2 text-center">Module 2</h2>
+    <h2 class="text-xl font-bold text-green-700 mb-2 text-center">சமனிலிகளை தீர்த்தல்</h2>
+    
+    <div class="overflow-x-auto mb-4">
+  <p class="mb-4 text-gray-700">
+    இங்கு தெரியக்கனியம் எழுவாய் மாற்றம் செய்யப்படும்:
+  </p>
+
+  <div class="bg-white shadow p-4 rounded mb-6">
+    <div class="overflow-x-auto">
+  <pre class="text-lg text-gray-800 ">
+x + 3 > 5
+x > 5 - 3
+x > 2
+  </pre>
+</div>
+  </div>
+
+  <h3 class="text-base font-semibold mb-2 text-green-700">சமனிலிகளை தீர்த்து தீர்வுகளை தொடைக் குறிப்பிட்டில் எழுதுதல்</h3>
+
+  <div class="bg-white shadow p-4 rounded mb-6">
+ <div class="overflow-x-auto">    
+<pre class="text-lg text-gray-800">
+x > 2  
+x = { 3, 4, 5, 6, … }
+    </pre>
+</div>
+  </div>
+
+  <main class="max-w-4xl mx-auto">
+  <section class="bg-white shadow rounded-lg p-5 mb-6">
+    <h3 class="text-base font-semibold mb-2 text-green-700">சமனிலிகளை தீர்த்து தீர்வுகளை எண்கோட்டில் குறித்தல்</h3>
+
+    <!-- Only this div is scrollable -->
+    <div class="overflow-x-auto">
+  
+  <table class="min-w-full border border-gray-300 mb-6">
+    <thead class="bg-purple-200">
+      <tr>
+        <th class="px-4 py-2 border">குறியீடு</th>
+        <th class="px-4 py-2 border">குறிப்பு</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white">
+      <tr>
+        <td class="px-4 py-2 border">&gt;, &lt;</td>
+        <td class="px-4 py-2 border">⚪ (வெற்று வட்டம்)</td>
+      </tr>
+      <tr class="bg-purple-50">
+        <td class="px-4 py-2 border">&ge;, &le;</td>
+        <td class="px-4 py-2 border">⚫ (நிறைந்த வட்டம்)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+  </section>
+</main>
+  <!-- Number line drawing -->
+  
+<h3 class="text-base font-semibold mb-2 text-green-700">எண்கோடு: x &gt; 2</h3>
+
+<!-- Scrollable container -->
+<div class="overflow-x-auto">
+  <div class="inline-block min-w-[500px] bg-white p-6 shadow rounded">
+    <svg width="500" height="80">
+      <!-- Base line -->
+      <line x1="20" y1="40" x2="480" y2="40" stroke="black" stroke-width="2"/>
+      
+      <!-- Arrow -->
+      <polygon points="480,40 470,35 470,45" fill="black" />
+
+      <!-- Mark ticks -->
+      <line x1="100" y1="35" x2="100" y2="45" stroke="black"/>
+      <text x="95" y="60" font-size="14">0</text>
+
+      <line x1="200" y1="35" x2="200" y2="45" stroke="black"/>
+      <text x="195" y="60" font-size="14">2</text>
+
+      <line x1="300" y1="35" x2="300" y2="45" stroke="black"/>
+      <text x="295" y="60" font-size="14">4</text>
+
+      <line x1="400" y1="35" x2="400" y2="45" stroke="black"/>
+      <text x="395" y="60" font-size="14">6</text>
+
+      <!-- Open circle at 2 -->
+      <circle cx="200" cy="40" r="6" fill="white" stroke="black" stroke-width="2"/>
+
+      <!-- Solution region -->
+      <line x1="206" y1="40" x2="470" y2="40" stroke="red" stroke-width="4" />
+    </svg>
+  </div>
+</div>
+    </div>
+
+    <div class="aspect-w-16 aspect-h-9 mb-4">
+      <iframe src="https://www.youtube.com/embed/9bZkp7q19f0" allowfullscreen class="w-full h-full"></iframe>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+  <a href="Numberline ws.html">
+    <button class="btn w-full sm:w-auto bg-green-600 hover:bg-pink-700">
+      Practices
+    </button>
+  </a>
+  <a href="Numberline.html">
+    <button class="btn w-full sm:w-auto bg-green-600 hover:bg-pink-700">
+      Check Answers
+    </button>
+  </a>
+</div>
+    </div>
+
+  <!-- Chapter 3 -->
+  <div class="card bg-pink-50">
+    <h2 class="text-xl font-bold text-pink-700 mb-2 text-center">Module 3</h2>
+    <h2 class="text-xl font-bold text-pink-700 mb-2 text-center"> x &gt;/&lt; a,  y &gt;/&lt; b வடிவிலான சமனிலிகளை தெக்காட்டின் தளத்தில் குறித்தல்</h2>
+  
+    
+<main class="max-w-4xl mx-auto">
+  <section class="bg-white shadow rounded-lg p-5 mb-6">
+    <h2 class="text-base font-semibold text-pink-600 mb-4">செயல்முறை (Steps)</h2>
+
+    <!-- Only this div is scrollable -->
+    <div class="overflow-x-auto">
+      <table class="w-full table-auto border border-gray-300">
+        <thead class="bg-purple-200">
+          <tr>
+            <th class="px-4 py-2 border text-left">Step</th>
+            <th class="px-4 py-2 border text-left">விளக்கம்</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          <tr>
+            <td class="px-4 py-3 border align-top text-sm sm:text-base">Step 1</td>
+            <td class="px-4 py-3 border text-sm sm:text-base">
+              சமனிலியின் குறியீட்டுக்கு ஏற்ப நேர்கோடா அல்லது புள்ளிக்கோடா என தீர்மானிக்க.
+            </td>
+          </tr>
+          <tr class="bg-purple-50">
+            <td class="px-4 py-3 border align-top text-sm sm:text-base">Step 2</td>
+            <td class="px-4 py-3 border text-sm sm:text-base">
+              கோட்டினை வரைக
+            </td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 border align-top text-sm sm:text-base">Step 3</td>
+            <td class="px-4 py-3 border text-sm sm:text-base">
+              சமனிலியின் குறியீட்டுக்கு ஏற்ப வரையப்பட்ட கோட்டில் இருந்து பெறுமானம் அதிகரித்து அல்லது குறைந்து செல்லும் திசையில் நிறம் தீட்டப்படும்
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+
+
+    <div class="aspect-w-16 aspect-h-9 mb-4">
+      <iframe src="https://www.youtube.com/embed/3JZ_D3ELwOQ" allowfullscreen class="w-full h-full"></iframe>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+  <a href="practice.html">
+    <button class="btn w-full sm:w-auto bg-pink-600 hover:bg-pink-700">
+      Practices
+    </button>
+  </a>
+  <a href="check-answers.html">
+    <button class="btn w-full sm:w-auto bg-pink-600 hover:bg-pink-700">
+      Check Answers
+    </button>
+  </a>
+</div>
+  </div>
+
+  <!-- Chapter 4 -->
+  <div class="card bg-indigo-50">
+    <h2 class="text-xl font-bold text-indigo-700 mb-2 text-center">Module 4</h2>
+    <h2 class="text-xl font-bold text-indigo-700 mb-2 text-center">y / x &nbsp;&nbsp; > / < &nbsp;&nbsp; a வடிவிலான சமனிலிகளை தெக்காட்டின் தளத்தில் குறித்தல்</h2>
+
+
+  <main class="max-w-4xl mx-auto">
+  <section class="bg-white shadow rounded-lg p-5 mb-6">
+    <h2 class="text-base font-semibold text-pink-600 mb-4">செயல்முறை (Steps)</h2>
+
+    <!-- Only this div is scrollable -->
+    <div class="overflow-x-auto">
+
+      <table class="min-w-full border border-gray-300">
+        <thead class="bg-purple-200">
+          <tr>
+            <th class="px-4 py-2 border text-left">Step</th>
+            <th class="px-4 py-2 border text-left">விளக்கம்</th>
+          </tr>
+        </thead>
+
+        <tbody class="bg-white">
+          <tr class="">
+            <td class="px-4 py-3 border align-top">Step 1</td>
+            <td class="px-4 py-3 border">
+               சமனிலியின் குறியீட்டிக்கு ஏற்ப நேர்கோடா அல்லது புள்ளிக்கோடா என தீர்மானிக்க.
+            </td>
+          </tr>
+
+          <tr class="bg-purple-50">
+            <td class="px-4 py-3 border align-top">Step 2</td>
+            <td class="px-4 py-3 border">
+              X க்கு எழுமாறாக 3 பெறுமானங்கள் எடுக்கப்பட்டு y க்கு பெறுமானங்கள் கணிக்கப்படும்  
+              
+            </td>
+          </tr>
+
+          <tr>
+            <td class="px-4 py-3 border align-top">Step 3</td>
+            <td class="px-4 py-3 border">
+              ஆள்கூறுகள் கண்டறியப்பட்டு கோடு வரையப்படும்
+              </td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 border align-top">Step 4</td>
+            <td class="px-4 py-3 border">
+              சமனிலியின் குறியீட்டிக்கு ஏற்ப வரையப்பட்ட கோட்டின் மேலாக அல்லது கீழாக நிறம் தீட்டுக்க
+              </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+
+
+    <div class="aspect-w-16 aspect-h-9 mb-4">
+      <iframe src="https://www.youtube.com/embed/L_jWHffIx5E" allowfullscreen class="w-full h-full"></iframe>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+  <a href="Find Area ws.html">
+    <button class="btn w-full sm:w-auto bg-indigo-600 hover:bg-pink-700">
+      Practices
+    </button>
+  </a>
+  <a href="Find Area.html">
+    <button class="btn w-full sm:w-auto bg-indigo-600 hover:bg-pink-700">
+      Check Answers
+    </button>
+  </a>
+</div>
+  </div>
+
+
+
+
+  <!-- Chapter 5 -->
+  <div class="card bg-teal-50">
+    <h2 class="text-xl font-bold text-teal-700 mb-2 text-center">Module 5</h2>
+    <h2 class="text-xl font-bold text-teal-700 mb-2 text-center">நிறம் தீட்டப்பட்ட பிரதேசத்திற்குரிய சமனிலியினை எழுதுதல்</h2>
+    
+
+
+
+  <main class="max-w-4xl mx-auto">
+  <section class="bg-white shadow rounded-lg p-5 mb-6">
+    <h2 class="text-base font-semibold text-pink-600 mb-4">செயல்முறை (Steps)</h2>
+
+    <!-- Only this div is scrollable -->
+    <div class="overflow-x-auto">
+
+      <table class="min-w-full border border-gray-300">
+        <thead class="bg-purple-200">
+          <tr>
+            <th class="px-4 py-2 border text-left">Step</th>
+            <th class="px-4 py-2 border text-left">விளக்கம்</th>
+          </tr>
+        </thead>
+
+        <tbody class="bg-white">
+          <tr class="">
+            <td class="px-4 py-3 border align-top">Step 1</td>
+            <td class="px-4 py-3 border">
+              <h3>கோட்டின் சமன்பாட்டினை காணுதல்</h3>
+               <ol class="list-decimal list-inside space-y-3 text-gray-800">
+                  <li>
+                    படித்திறன் (Slope) காணுதல்
+                  </li>
+                  <li>
+                    வெட்டுதுண்டு (Intercept) காணுதல்  
+                  </li>
+                </ol>
+            </td>
+          </tr>
+
+          <tr class="bg-purple-50">
+            <td class="px-4 py-3 border align-top">Step 2</td>
+            <td class="px-4 py-3 border">
+               நிறம் தீட்டப்பட்ட பிரதேசம் கோட்டின் மேற்புறமா கீழப்புறமா என இனம் காணுதல்
+              
+            </td>
+          </tr>
+
+          <tr>
+            <td class="px-4 py-3 border align-top">Step 3</td>
+            <td class="px-4 py-3 border">
+              நேர்கோடா புள்ளிக்கோடா என இனம் காணுதல் 
+              </td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 border align-top">Step 4</td>
+            <td class="px-4 py-3 border">
+              சமனிலியினை எழுதுதல். 
+              </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+
+
+
+
+
+
+
+
+    <div class="aspect-w-16 aspect-h-9 mb-4">
+      <iframe src="https://www.youtube.com/embed/eVTXPUF4Oz4" allowfullscreen class="w-full h-full"></iframe>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+  <a href="Find inequality ws.html">
+    <button class="btn w-full sm:w-auto bg-teal-600 hover:bg-pink-700">
+      Practices
+    </button>
+  </a>
+  <a href="Find inequality.html">
+    <button class="btn w-full sm:w-auto bg-teal-600 hover:bg-pink-700">
+      Check Answers
+    </button>
+  </a>
+</div>
+  </div>
+
+</body>
+</html>
